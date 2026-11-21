@@ -24,7 +24,7 @@ class GitHubSettings(BaseModel):
 
 
 class ExecutionSettings(BaseModel):
-    max_daily_tasks: int = 10
+    max_daily_tasks: int = 2
     max_repair_attempts: int = 2
     dry_run: bool = False
     allowlist_extensions: List[str] = Field(
@@ -118,7 +118,7 @@ def load_config(config_file: Optional[str] = None) -> AgentConfig:
     if os.getenv("TARGET_BRANCH"):
         config.github.target_branch = os.getenv("TARGET_BRANCH")
     if os.getenv("AUTO_MERGE"):
-        config.github.auto_merge = os.getenv("AUTO_MERGE", "true").lower() in ("true", "1", "yes")
+        config.github.auto_merge = os.getenv("AUTO_MERGE", "false").lower() in ("true", "1", "yes")
 
     if os.getenv("MAX_DAILY_TASKS"):
         try:

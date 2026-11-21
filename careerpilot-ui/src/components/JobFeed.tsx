@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Search, MapPin, DollarSign, Sparkles, Building2, ExternalLink } from 'lucide-react';
+import { useState } from 'react';
+import { Search, MapPin, DollarSign, Sparkles, Building2 } from 'lucide-react';
 
 interface Job {
   id: number;

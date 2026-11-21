@@ -1,4 +1,3 @@
-import React from 'react';
 import { Briefcase, FileText, CheckCircle2, User, Sparkles } from 'lucide-react';
 import { TabType } from '../App.tsx';
 

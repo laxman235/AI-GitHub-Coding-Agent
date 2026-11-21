@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { UploadCloud, CheckCircle2, AlertTriangle, RefreshCw, Sparkles, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, AlertTriangle, RefreshCw, Sparkles, FileText } from 'lucide-react';
 
 export default function ResumeOptimizer() {
   const [analyzing, setAnalyzing] = useState(false);

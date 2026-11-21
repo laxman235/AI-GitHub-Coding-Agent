@@ -34,6 +34,15 @@ class RepositoryArchitecture(BaseModel):
     tests: List[JavaClassMetadata] = Field(default_factory=list)
     other_classes: List[JavaClassMetadata] = Field(default_factory=list)
     missing_test_targets: List[str] = Field(default_factory=list)
+    # Multi-stack additions
+    has_frontend: bool = False
+    frontend_framework: str = "React"
+    frontend_path: str = "careerpilot-ui"
+    frontend_components: List[str] = Field(default_factory=list)
+    frontend_services: List[str] = Field(default_factory=list)
+    has_ai_service: bool = False
+    ai_service_path: str = "ai-service"
+    python_modules: List[str] = Field(default_factory=list)
 
 
 class RepositoryService:
@@ -43,13 +52,62 @@ class RepositoryService:
         self.root_path = os.path.abspath(root_path)
 
     def scan_repository(self) -> RepositoryArchitecture:
-        """Perform a complete static analysis of the Java Spring Boot repository."""
+        """Perform a complete static analysis of the multi-stack CareerPilot AI repository."""
         arch = RepositoryArchitecture(root_path=self.root_path)
         self._parse_pom(arch)
         self._load_product_vision(arch)
         self._scan_java_files(arch)
         self._correlate_tests(arch)
+        self._scan_frontend(arch)
+        self._scan_python_modules(arch)
         return arch
+
+    def _scan_frontend(self, arch: RepositoryArchitecture) -> None:
+        """Discover frontend components and services in React/TypeScript UI."""
+        possible_ui_roots = [
+            os.path.join(self.root_path, "careerpilot-ui"),
+            os.path.join(self.root_path, "..", "careerpilot-ui"),
+            os.path.join(os.getcwd(), "careerpilot-ui")
+        ]
+        ui_root = next((p for p in possible_ui_roots if os.path.exists(p) and os.path.exists(os.path.join(p, "package.json"))), None)
+        if not ui_root:
+            return
+
+        arch.has_frontend = True
+        arch.frontend_path = os.path.relpath(ui_root, self.root_path)
+
+        src_dir = os.path.join(ui_root, "src")
+        if os.path.exists(src_dir):
+            for root, dirs, files in os.walk(src_dir):
+                if any(ignored in root for ignored in ["node_modules", "dist", ".git"]):
+                    continue
+                for file in files:
+                    if file.endswith((".tsx", ".jsx", ".ts", ".js")):
+                        rel_file = os.path.relpath(os.path.join(root, file), ui_root)
+                        if "components" in rel_file:
+                            arch.frontend_components.append(rel_file)
+                        elif "services" in rel_file or "api" in rel_file:
+                            arch.frontend_services.append(rel_file)
+
+    def _scan_python_modules(self, arch: RepositoryArchitecture) -> None:
+        """Discover Python microservices or AI service components."""
+        possible_ai_roots = [
+            os.path.join(self.root_path, "ai-service"),
+            os.path.join(self.root_path, "..", "ai-service"),
+            os.path.join(os.getcwd(), "ai-service")
+        ]
+        ai_root = next((p for p in possible_ai_roots if os.path.exists(p)), None)
+        if not ai_root:
+            return
+
+        arch.has_ai_service = True
+        arch.ai_service_path = os.path.relpath(ai_root, self.root_path)
+        for root, dirs, files in os.walk(ai_root):
+            if any(ignored in root for ignored in [".venv", "__pycache__", ".git"]):
+                continue
+            for file in files:
+                if file.endswith(".py"):
+                    arch.python_modules.append(os.path.relpath(os.path.join(root, file), ai_root))
 
     def _load_product_vision(self, arch: RepositoryArchitecture) -> None:
         """Load PRODUCT_PROMPT.md if present in repository root."""

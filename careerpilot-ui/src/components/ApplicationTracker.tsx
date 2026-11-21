@@ -1,5 +1,4 @@
-import React from 'react';
-import { Clock, CheckCircle2, Award, XCircle, Bookmark } from 'lucide-react';
+import { Clock, CheckCircle2, Award, Bookmark } from 'lucide-react';
 
 interface Application {
   id: number;

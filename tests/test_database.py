@@ -60,3 +60,23 @@ def test_task_lifecycle_and_deduplication(temp_db):
     tasks = temp_db.get_tasks_for_run("run_test")
     assert len(tasks) == 1
     assert tasks[0].status == TaskStatus.COMPLETED
+
+
+def test_sprint_lifecycle(temp_db):
+    sprint = temp_db.get_or_create_active_sprint()
+    assert sprint.current_day == 1
+    assert sprint.is_finished is False
+
+    # Advance day
+    advanced = temp_db.advance_sprint_day(sprint.sprint_id)
+    assert advanced.current_day == 2
+    assert 1 in advanced.completed_days
+
+    # Fast forward to Day 7
+    for _ in range(5):
+        advanced = temp_db.advance_sprint_day(sprint.sprint_id)
+    assert advanced.current_day == 7
+
+    # Advance past Day 7
+    finished = temp_db.advance_sprint_day(sprint.sprint_id)
+    assert finished.is_finished is True

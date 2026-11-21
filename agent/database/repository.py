@@ -4,7 +4,7 @@ import json
 import sqlite3
 from typing import List, Optional, Set
 from datetime import datetime, timezone
-from agent.database.models import TaskRecord, RunRecord, TaskStatus, RunStatus, TaskCategory
+from agent.database.models import TaskRecord, RunRecord, SprintRecord, TaskStatus, RunStatus, TaskCategory
 
 
 class TaskDatabase:
@@ -62,6 +62,24 @@ class TaskDatabase:
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
                     FOREIGN KEY(run_id) REFERENCES runs(id)
+                );
+            """)
+
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS sprints (
+                    sprint_id TEXT PRIMARY KEY,
+                    start_date TEXT NOT NULL,
+                    current_day INTEGER DEFAULT 1,
+                    completed_days TEXT,
+                    pending_tasks TEXT,
+                    completed_tasks TEXT,
+                    failed_tasks TEXT,
+                    pr_urls TEXT,
+                    commit_shas TEXT,
+                    test_results TEXT,
+                    blockers TEXT,
+                    is_finished INTEGER DEFAULT 0,
+                    updated_at TEXT NOT NULL
                 );
             """)
 
@@ -240,3 +258,133 @@ class TaskDatabase:
                     updated_at=row["updated_at"]
                 ))
             return results
+
+    def get_active_sprint(self) -> Optional[SprintRecord]:
+        """Fetch the current non-finished 7-day sprint."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM sprints WHERE is_finished = 0 ORDER BY start_date DESC LIMIT 1")
+            row = cursor.fetchone()
+            if not row:
+                return None
+            return self._row_to_sprint(row)
+
+    def create_sprint(self, sprint: SprintRecord) -> str:
+        """Create a new 7-day sprint record."""
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO sprints (
+                    sprint_id, start_date, current_day, completed_days,
+                    pending_tasks, completed_tasks, failed_tasks, pr_urls,
+                    commit_shas, test_results, blockers, is_finished, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                sprint.sprint_id,
+                sprint.start_date,
+                sprint.current_day,
+                json.dumps(sprint.completed_days),
+                json.dumps(sprint.pending_tasks),
+                json.dumps(sprint.completed_tasks),
+                json.dumps(sprint.failed_tasks),
+                json.dumps(sprint.pr_urls),
+                json.dumps(sprint.commit_shas),
+                json.dumps(sprint.test_results),
+                json.dumps(sprint.blockers),
+                1 if sprint.is_finished else 0,
+                sprint.updated_at
+            ))
+            conn.commit()
+        return sprint.sprint_id
+
+    def update_sprint(self, sprint: SprintRecord) -> None:
+        """Update active sprint state."""
+        sprint.updated_at = datetime.now(timezone.utc).isoformat()
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE sprints
+                SET current_day = ?,
+                    completed_days = ?,
+                    pending_tasks = ?,
+                    completed_tasks = ?,
+                    failed_tasks = ?,
+                    pr_urls = ?,
+                    commit_shas = ?,
+                    test_results = ?,
+                    blockers = ?,
+                    is_finished = ?,
+                    updated_at = ?
+                WHERE sprint_id = ?
+            """, (
+                sprint.current_day,
+                json.dumps(sprint.completed_days),
+                json.dumps(sprint.pending_tasks),
+                json.dumps(sprint.completed_tasks),
+                json.dumps(sprint.failed_tasks),
+                json.dumps(sprint.pr_urls),
+                json.dumps(sprint.commit_shas),
+                json.dumps(sprint.test_results),
+                json.dumps(sprint.blockers),
+                1 if sprint.is_finished else 0,
+                sprint.updated_at,
+                sprint.sprint_id
+            ))
+            conn.commit()
+
+    def advance_sprint_day(self, sprint_id: str) -> Optional[SprintRecord]:
+        """Advance the sprint to next day (up to Day 7). Mark finished if past Day 7."""
+        sprint = self.get_active_sprint()
+        if not sprint or sprint.sprint_id != sprint_id:
+            return None
+
+        if sprint.current_day not in sprint.completed_days:
+            sprint.completed_days.append(sprint.current_day)
+
+        if sprint.current_day >= 7:
+            sprint.is_finished = True
+        else:
+            sprint.current_day += 1
+
+        self.update_sprint(sprint)
+        return sprint
+
+    def get_or_create_active_sprint(self) -> SprintRecord:
+        """Get current active sprint or initialize a new 7-day CareerPilot AI sprint."""
+        active = self.get_active_sprint()
+        if active:
+            return active
+
+        import uuid
+        new_sprint = SprintRecord(
+            sprint_id=f"sprint_{uuid.uuid4().hex[:8]}",
+            current_day=1,
+            completed_days=[],
+            pending_tasks=[],
+            completed_tasks=[],
+            failed_tasks=[],
+            pr_urls=[],
+            commit_shas=[],
+            test_results={},
+            blockers=[],
+            is_finished=False
+        )
+        self.create_sprint(new_sprint)
+        return new_sprint
+
+    def _row_to_sprint(self, row: sqlite3.Row) -> SprintRecord:
+        return SprintRecord(
+            sprint_id=row["sprint_id"],
+            start_date=row["start_date"],
+            current_day=row["current_day"],
+            completed_days=json.loads(row["completed_days"]) if row["completed_days"] else [],
+            pending_tasks=json.loads(row["pending_tasks"]) if row["pending_tasks"] else [],
+            completed_tasks=json.loads(row["completed_tasks"]) if row["completed_tasks"] else [],
+            failed_tasks=json.loads(row["failed_tasks"]) if row["failed_tasks"] else [],
+            pr_urls=json.loads(row["pr_urls"]) if row["pr_urls"] else [],
+            commit_shas=json.loads(row["commit_shas"]) if row["commit_shas"] else [],
+            test_results=json.loads(row["test_results"]) if row["test_results"] else {},
+            blockers=json.loads(row["blockers"]) if row["blockers"] else [],
+            is_finished=bool(row["is_finished"]),
+            updated_at=row["updated_at"]
+        )

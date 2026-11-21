@@ -36,6 +36,13 @@ reports/*.md
 # Environment secrets
 .env
 .env.local
+careerpilot-ui/.env
+careerpilot-ui/.env.local
+
+# Node & Frontend
+node_modules/
+careerpilot-ui/node_modules/
+careerpilot-ui/dist/
 
 # IDE
 .idea/

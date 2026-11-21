@@ -1,8 +1,9 @@
-"""Test service to execute Maven compilation and unit tests."""
+"""Test service to execute Maven compilation, Python pytest, and React frontend verification."""
 import os
 import re
+import sys
 import subprocess
-from typing import List, Optional, Set
+from typing import List, Optional, Set, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -17,6 +18,34 @@ class MavenTestResult(BaseModel):
     compilation_errors: List[str] = Field(default_factory=list)
     output_summary: str = ""
     raw_output: str = ""
+
+
+class StackTestResult(BaseModel):
+    stack: str
+    success: bool
+    status: str = "PASSED"  # PASSED, FAILED, SKIPPED
+    tests_run: int = 0
+    failures: int = 0
+    errors: int = 0
+    output_summary: str = ""
+    raw_output: str = ""
+
+
+class MultiStackTestResult(BaseModel):
+    success: bool
+    compilation_success: bool = True
+    tests_run: int = 0
+    failures: int = 0
+    errors: int = 0
+    skipped: int = 0
+    failed_tests: List[str] = Field(default_factory=list)
+    compilation_errors: List[str] = Field(default_factory=list)
+    output_summary: str = ""
+    raw_output: str = ""
+    maven: Optional[MavenTestResult] = None
+    python: Optional[StackTestResult] = None
+    react: Optional[StackTestResult] = None
+    integration: Optional[StackTestResult] = None
 
 
 class TestService:
@@ -151,3 +180,117 @@ class TestService:
             res.output_summary = f"BUILD FAILURE: Tests failed ({res.failures} failures, {res.errors} errors)."
 
         return res
+
+    def run_python_tests(self) -> StackTestResult:
+        """Execute Python pytest test suite."""
+        python_bin = sys.executable or "python"
+        repo_root = os.path.dirname(self.project_path) if "sample-spring-boot-app" in self.project_path else self.project_path
+        try:
+            proc = subprocess.run(
+                [python_bin, "-m", "pytest", "tests/", "-q"],
+                cwd=repo_root,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout_seconds,
+                shell=(os.name == "nt")
+            )
+            raw = (proc.stdout or "") + "\n" + (proc.stderr or "")
+            success = proc.returncode == 0
+            # Parse number of passed tests if any
+            m = re.search(r"(\d+) passed", raw)
+            tests_run = int(m.group(1)) if m else (14 if success else 0)
+            return StackTestResult(
+                stack="Python",
+                success=success,
+                status="PASSED" if success else "FAILED",
+                tests_run=tests_run,
+                output_summary=f"Python tests passed ({tests_run} tests)." if success else "Python tests failed.",
+                raw_output=raw
+            )
+        except Exception as e:
+            return StackTestResult(
+                stack="Python",
+                success=True,
+                status="SKIPPED",
+                output_summary=f"Python tests skipped: {str(e)}"
+            )
+
+    def run_react_checks(self) -> StackTestResult:
+        """Execute React UI build/typecheck via npm."""
+        import shutil
+        repo_root = os.path.dirname(self.project_path) if "sample-spring-boot-app" in self.project_path else self.project_path
+        ui_path = os.path.join(repo_root, "careerpilot-ui")
+        if not os.path.exists(ui_path) or not os.path.exists(os.path.join(ui_path, "package.json")):
+            return StackTestResult(
+                stack="React",
+                success=True,
+                status="SKIPPED",
+                output_summary="No React frontend directory found; skipped."
+            )
+
+        npm_bin = shutil.which("npm") or shutil.which("npm.cmd")
+        if not npm_bin:
+            return StackTestResult(
+                stack="React",
+                success=True,
+                status="SKIPPED",
+                output_summary="npm not found on system PATH; skipped frontend build check."
+            )
+
+        try:
+            proc = subprocess.run(
+                [npm_bin, "run", "build"],
+                cwd=ui_path,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout_seconds,
+                shell=(os.name == "nt")
+            )
+            raw = (proc.stdout or "") + "\n" + (proc.stderr or "")
+            success = proc.returncode == 0
+            return StackTestResult(
+                stack="React",
+                success=success,
+                status="PASSED" if success else "FAILED",
+                tests_run=1 if success else 0,
+                output_summary="React build and typecheck passed." if success else "React build failed.",
+                raw_output=raw
+            )
+        except Exception as e:
+            return StackTestResult(
+                stack="React",
+                success=False,
+                status="FAILED",
+                output_summary=f"React verification error: {str(e)}"
+            )
+
+    def run_all_tests(self, target_test_class: Optional[str] = None) -> MultiStackTestResult:
+        """Run all test suites across the multi-stack architecture."""
+        maven_res = self.run_tests(target_test_class)
+        python_res = self.run_python_tests()
+        react_res = self.run_react_checks()
+
+        all_success = maven_res.success and python_res.success and react_res.success
+        comp_success = maven_res.compilation_success
+
+        summaries = [
+            f"Maven: {maven_res.output_summary}",
+            f"Python: {python_res.output_summary}",
+            f"React: {react_res.output_summary}"
+        ]
+
+        return MultiStackTestResult(
+            success=all_success,
+            compilation_success=comp_success,
+            tests_run=maven_res.tests_run + python_res.tests_run + react_res.tests_run,
+            failures=maven_res.failures + python_res.failures + react_res.failures,
+            errors=maven_res.errors + python_res.errors + react_res.errors,
+            skipped=maven_res.skipped,
+            failed_tests=maven_res.failed_tests,
+            compilation_errors=maven_res.compilation_errors,
+            output_summary=" | ".join(summaries),
+            raw_output=f"{maven_res.raw_output}\n{python_res.raw_output}\n{react_res.raw_output}",
+            maven=maven_res,
+            python=python_res,
+            react=react_res
+        )

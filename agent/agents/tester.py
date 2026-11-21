@@ -1,9 +1,10 @@
 """Agent 4: Testing Agent."""
-from agent.services.test_service import TestService, MavenTestResult
+from typing import Optional, Union
+from agent.services.test_service import TestService, MavenTestResult, MultiStackTestResult
 
 
 class TesterAgent:
-    """Executes Maven test suites, verifies compilation, and detects regressions."""
+    """Executes multi-stack test suites (Java Maven, Python pytest, React), verifies compilation, and detects regressions."""
 
     def __init__(self, test_service: TestService):
         self.test_service = test_service
@@ -12,6 +13,10 @@ class TesterAgent:
         """Verify code compiles without syntax or classpath issues."""
         return self.test_service.run_compile()
 
-    def run_tests(self, target_test_class: str = None) -> MavenTestResult:
-        """Execute unit and integration tests."""
+    def run_tests(self, target_test_class: Optional[str] = None) -> MultiStackTestResult:
+        """Execute unit and integration tests across multi-stack architecture."""
+        return self.test_service.run_all_tests(target_test_class=target_test_class)
+
+    def run_maven_tests_only(self, target_test_class: Optional[str] = None) -> MavenTestResult:
+        """Execute Maven tests only."""
         return self.test_service.run_tests(test_class=target_test_class)

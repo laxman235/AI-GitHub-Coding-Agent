@@ -1,4 +1,3 @@
-import React from 'react';
 import { Target, Search, Clock, Award } from 'lucide-react';
 
 export default function StatsGrid() {

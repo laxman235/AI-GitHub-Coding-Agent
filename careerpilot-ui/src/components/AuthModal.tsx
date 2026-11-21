@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useState, type FormEvent } from 'react';
+import { X, Sparkles, AlertCircle } from 'lucide-react';
 import { authService } from '../services/api.ts';
 
 interface AuthModalProps {
@@ -14,7 +14,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setErrorMsg('');

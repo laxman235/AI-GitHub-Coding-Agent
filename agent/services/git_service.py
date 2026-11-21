@@ -154,3 +154,88 @@ class GitService:
             cmd = ["git", "push", "-u", remote_name, branch_name]
             result = subprocess.run(cmd, cwd=self.repo_path, capture_output=True, text=True)
             return result.returncode == 0
+
+    def sync_state_to_branch(
+        self,
+        branch_name: str = "agent-state",
+        files: Optional[List[str]] = None,
+        remote_name: str = "origin",
+        dry_run: bool = False
+    ) -> bool:
+        """Persist state files (like data/agent_tasks.db, sprint_state.json) to an isolated branch."""
+        if dry_run:
+            return True
+        if not files:
+            files = ["data/agent_tasks.db", "data/sprint_state.json"]
+
+        from datetime import datetime, timezone
+        current_branch = self.get_current_branch()
+        try:
+            existing_files = [f for f in files if os.path.exists(os.path.join(self.repo_path, f))]
+            if not existing_files:
+                return False
+
+            file_contents = {}
+            for f in existing_files:
+                full_path = os.path.join(self.repo_path, f)
+                with open(full_path, "rb") as fp:
+                    file_contents[f] = fp.read()
+
+            try:
+                self.repo.git.checkout(branch_name)
+            except Exception:
+                try:
+                    self.repo.git.checkout("-b", branch_name)
+                except Exception:
+                    pass
+
+            for rel_path, content in file_contents.items():
+                dest = os.path.join(self.repo_path, rel_path)
+                os.makedirs(os.path.dirname(dest), exist_ok=True)
+                with open(dest, "wb") as fp:
+                    fp.write(content)
+                self.repo.git.add(rel_path)
+
+            self.repo.index.commit(f"chore: update persistent agent state [{datetime.now(timezone.utc).isoformat()}]")
+            try:
+                self.repo.remote(name=remote_name).push(refspec=f"{branch_name}:{branch_name}")
+            except Exception:
+                subprocess.run(["git", "push", "-u", remote_name, branch_name], cwd=self.repo_path, check=False)
+
+            self.repo.git.checkout(current_branch)
+            return True
+        except Exception:
+            try:
+                self.repo.git.checkout(current_branch)
+            except Exception:
+                pass
+            return False
+
+    def restore_state_from_branch(
+        self,
+        branch_name: str = "agent-state",
+        files: Optional[List[str]] = None,
+        remote_name: str = "origin"
+    ) -> bool:
+        """Restore state files from the state branch without switching active branch."""
+        if not files:
+            files = ["data/agent_tasks.db", "data/sprint_state.json"]
+        try:
+            try:
+                self.repo.git.fetch(remote_name, branch_name)
+            except Exception:
+                pass
+
+            target_ref = f"{remote_name}/{branch_name}" if f"{remote_name}/{branch_name}" in [r.name for r in self.repo.refs] else branch_name
+            for f in files:
+                try:
+                    content = self.repo.git.show(f"{target_ref}:{f}")
+                    dest = os.path.join(self.repo_path, f)
+                    os.makedirs(os.path.dirname(dest), exist_ok=True)
+                    with open(dest, "w", encoding="utf-8") as fp:
+                        fp.write(content)
+                except Exception:
+                    pass
+            return True
+        except Exception:
+            return False

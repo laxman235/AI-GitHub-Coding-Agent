@@ -3,7 +3,7 @@ import os
 import json
 from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
-from agent.database.models import RunRecord, TaskRecord
+from agent.database.models import RunRecord, TaskRecord, SprintRecord
 
 
 class ReportService:
@@ -19,7 +19,10 @@ class ReportService:
         tasks: List[TaskRecord],
         repo_name: str,
         groq_model: str,
-        target_branch: str = "main"
+        target_branch: str = "main",
+        sprint: Optional[SprintRecord] = None,
+        multi_stack_test_summary: Optional[str] = None,
+        modules_inspected: Optional[List[str]] = None
     ) -> Dict[str, str]:
         """Generate both Markdown and JSON reports for this execution."""
         os.makedirs(self.reports_dir, exist_ok=True)
@@ -29,7 +32,12 @@ class ReportService:
         md_path = os.path.join(self.reports_dir, f"{base_filename}.md")
         json_path = os.path.join(self.reports_dir, f"{base_filename}.json")
 
-        md_content = self._render_markdown(run_record, tasks, repo_name, groq_model, target_branch)
+        md_content = self._render_markdown(
+            run_record, tasks, repo_name, groq_model, target_branch,
+            sprint=sprint,
+            multi_stack_test_summary=multi_stack_test_summary,
+            modules_inspected=modules_inspected
+        )
         with open(md_path, "w", encoding="utf-8") as f:
             f.write(md_content)
 
@@ -39,6 +47,9 @@ class ReportService:
             "repo_name": repo_name,
             "groq_model": groq_model,
             "target_branch": target_branch,
+            "sprint": sprint.model_dump() if sprint else None,
+            "multi_stack_test_summary": multi_stack_test_summary,
+            "modules_inspected": modules_inspected or [],
             "generated_at": datetime.now(timezone.utc).isoformat()
         }
         with open(json_path, "w", encoding="utf-8") as f:
@@ -56,38 +67,58 @@ class ReportService:
         tasks: List[TaskRecord],
         repo_name: str,
         groq_model: str,
-        target_branch: str
+        target_branch: str,
+        sprint: Optional[SprintRecord] = None,
+        multi_stack_test_summary: Optional[str] = None,
+        modules_inspected: Optional[List[str]] = None
     ) -> str:
-        """Render the Markdown daily execution report."""
+        """Render the Markdown daily execution report adhering to Section 14."""
         status_badge = "✅ SUCCESS" if run.status.value == "SUCCESS" else "⚠️ PARTIAL_SUCCESS" if run.status.value == "PARTIAL_SUCCESS" else "❌ FAILED"
         
         md = []
-        md.append(f"# 🤖 Autonomous AI Agent Daily Execution Report")
+        md.append(f"# 🤖 CareerPilot AI Autonomous Sprint Execution Report (Autonomous AI Agent Daily Execution Report)")
         md.append("")
+        if sprint:
+            sprint_status = "🎉 SPRINT COMPLETE (7/7 Days Finished)" if sprint.is_finished else f"Day {sprint.current_day} of 7 in Progress"
+            md.append(f"> **Sprint ID:** `{sprint.sprint_id}` | **Status:** {sprint_status}  ")
+            md.append(f"> **Completed Days:** `{', '.join(str(d) for d in sprint.completed_days) if sprint.completed_days else 'None yet'}`  ")
+            md.append("")
+
         md.append(f"**Repository:** `{repo_name}`  ")
-        md.append(f"**Target Branch:** `{target_branch}`  ")
+        md.append(f"**Target Branch:** `{target_branch}` (Protected - Human PR Review Required)  ")
         md.append(f"**Execution Date (UTC):** `{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}`  ")
         md.append(f"**Run ID:** `{run.id}`  ")
-        md.append(f"**Overall Status:** {status_badge}  ")
-        md.append(f"**Groq Model Configured:** `{groq_model}`  ")
-        md.append(f"**Total Tokens Used:** `{run.total_tokens_used}`  ")
+        md.append(f"**Overall Run Status:** {status_badge}  ")
+        md.append(f"**Groq AI Model:** `{groq_model}`  ")
+        md.append(f"**Tokens Consumed:** `{run.total_tokens_used}`  ")
         md.append("")
+        
+        if modules_inspected:
+            md.append(f"**Modules Inspected:** {', '.join(f'`{m}`' for m in modules_inspected)}  ")
+            md.append("")
+
+        if multi_stack_test_summary:
+            md.append("---")
+            md.append("## 🧪 Multi-Stack Verification & Test Results")
+            md.append(f"```text\n{multi_stack_test_summary}\n```")
+            md.append("")
+
         md.append("---")
-        md.append("## 📊 Execution Summary")
+        md.append("## 📊 Daily Execution Metrics")
         md.append("")
         md.append(f"| Metric | Count |")
         md.append(f"| :--- | :--- |")
         md.append(f"| Tasks Identified | {run.tasks_identified} |")
-        md.append(f"| Tasks Attempted | {run.tasks_attempted} |")
-        md.append(f"| Tasks Completed & PR'd | {run.tasks_completed} |")
-        md.append(f"| Tasks Failed / Rejected | {run.tasks_failed} |")
+        md.append(f"| Tasks Attempted | {run.tasks_attempted} (Max 2/day enforced) |")
+        md.append(f"| Tasks Completed & PR Published | {run.tasks_completed} |")
+        md.append(f"| Tasks Failed / Rolled Back | {run.tasks_failed} |")
         md.append("")
         md.append("---")
-        md.append("## 📝 Task Details")
+        md.append("## 📝 Planned & Executed Tasks")
         md.append("")
 
         if not tasks:
-            md.append("No tasks were scheduled or attempted during this run.")
+            md.append("No tasks were scheduled or attempted during this run. Repository is up to date!")
         else:
             md.append("| # | Title | Category | Status | Review Score | Repair Attempts | PR / Branch |")
             md.append("|---|---|---|---|---|---|---|")
@@ -104,6 +135,10 @@ class ReportService:
                 md.append(f"#### {idx}. {task.title}")
                 md.append(f"- **Description:** {task.description}")
                 md.append(f"- **Category:** `{task.category.value}` | **Priority:** {task.priority}/10")
+                if task.sprint_day:
+                    md.append(f"- **Sprint Day:** Day {task.sprint_day}")
+                if task.acceptance_criteria:
+                    md.append(f"- **Acceptance Criteria:** {', '.join(task.acceptance_criteria)}")
                 md.append(f"- **Target Files:** `{'`, `'.join(task.target_files) if task.target_files else 'Auto-detected'}`")
                 if task.commit_sha:
                     md.append(f"- **Commit SHA:** `{task.commit_sha}`")
@@ -115,9 +150,12 @@ class ReportService:
 
         md.append("---")
         md.append("## 🛡️ Safety & Quality Assurances")
-        md.append("- All changes verified via Maven compilation and unit tests before commit.")
-        md.append("- Independent Code Reviewer Agent validated code standards and security.")
-        md.append("- All code isolated in feature branches; `main` branch was not modified directly.")
-        md.append("- Pull requests require human approval before merging into `main`.")
+        md.append("- **Isolated Branches:** Changes developed in isolated feature branches; protected branches never modified directly.")
+        md.append("- **Strict Human Approval:** Automatic merge is strictly disabled (`auto_merge: false`). Human review is required.")
+        md.append("- **Multi-Stack Verification:** Maven Java 21 compilation, unit tests, and React UI integrity verified.")
+        md.append("- **Independent Review:** Code Reviewer Agent validated code standards, null safety, and security before PR creation.")
+        if sprint and not sprint.is_finished:
+            next_day = min(7, sprint.current_day + 1)
+            md.append(f"- **Next Execution Preview:** Ready for Sprint Day {next_day}/7 roadmap goals.")
         md.append("")
         return "\n".join(md)

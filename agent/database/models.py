@@ -51,7 +51,27 @@ class TaskRecord(BaseModel):
     test_failures_resolved: int = 0
     reviewer_score: Optional[int] = None
     error_message: Optional[str] = None
+    sprint_day: Optional[int] = None
+    acceptance_criteria: List[str] = Field(default_factory=list)
+    required_tests: List[str] = Field(default_factory=list)
+    dependencies: List[str] = Field(default_factory=list)
     created_at: str = Field(default_factory=_get_utc_now_iso)
+    updated_at: str = Field(default_factory=_get_utc_now_iso)
+
+
+class SprintRecord(BaseModel):
+    sprint_id: str
+    start_date: str = Field(default_factory=_get_utc_now_iso)
+    current_day: int = 1
+    completed_days: List[int] = Field(default_factory=list)
+    pending_tasks: List[str] = Field(default_factory=list)
+    completed_tasks: List[str] = Field(default_factory=list)
+    failed_tasks: List[str] = Field(default_factory=list)
+    pr_urls: List[str] = Field(default_factory=list)
+    commit_shas: List[str] = Field(default_factory=list)
+    test_results: dict = Field(default_factory=dict)
+    blockers: List[str] = Field(default_factory=list)
+    is_finished: bool = False
     updated_at: str = Field(default_factory=_get_utc_now_iso)
 
 

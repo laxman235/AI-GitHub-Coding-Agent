@@ -97,9 +97,11 @@ class AgentOrchestrator:
         logger.info(f"--- Starting Autonomous Coding Cycle [{run_id}] (Dry-Run: {is_dry_run}) ---")
         run_record = self.db.start_run(run_id, trigger="MANUAL" if is_dry_run else "SCHEDULED")
 
-        # 1. Baseline verification: Run initial compile check
-        logger.info("[Step 1] Verifying repository baseline and Maven status...")
-        baseline_test = self.tester_agent.verify_compilation()
+        # 1. Baseline verification: Run initial multi-stack compile and test check
+        logger.info("[Step 1] Verifying repository baseline across multi-stack architecture...")
+        sprint = self.db.get_or_create_active_sprint()
+        logger.info(f"Active Sprint: {sprint.sprint_id} | Day {sprint.current_day}/7 (Finished: {sprint.is_finished})")
+        baseline_test = self.tester_agent.run_tests()
         if not baseline_test.compilation_success and not is_dry_run:
             logger.warning(f"Baseline repository has compilation errors: {baseline_test.compilation_errors}")
 
@@ -172,6 +174,52 @@ class AgentOrchestrator:
         run_record.tasks_failed = len(failed_tasks)
         run_record.total_tokens_used = self.llm.total_tokens_used
 
+        # Update Sprint Record
+        for ct in completed_tasks:
+            if ct.id and ct.id not in sprint.completed_tasks:
+                sprint.completed_tasks.append(ct.id)
+            if ct.pr_url and ct.pr_url not in sprint.pr_urls:
+                sprint.pr_urls.append(ct.pr_url)
+            if ct.commit_sha and ct.commit_sha not in sprint.commit_shas:
+                sprint.commit_shas.append(ct.commit_sha)
+
+        for ft in failed_tasks:
+            if ft.id and ft.id not in sprint.failed_tasks:
+                sprint.failed_tasks.append(ft.id)
+
+        if completed_tasks and len(completed_tasks) == len(attempted_tasks):
+            sprint = self.db.advance_sprint_day(sprint.sprint_id) or sprint
+        else:
+            self.db.update_sprint(sprint)
+
+        # Mirror sprint state to JSON file
+        import json
+        sprint_json_path = os.path.join(self.repo_root, "data", "sprint_state.json")
+        try:
+            os.makedirs(os.path.dirname(sprint_json_path), exist_ok=True)
+            with open(sprint_json_path, "w", encoding="utf-8") as f:
+                json.dump(sprint.model_dump(), f, indent=2)
+        except Exception as e:
+            logger.debug(f"Could not write sprint_state.json: {e}")
+
+        # Sync state branch if not dry-run
+        if self.git_service and not is_dry_run:
+            try:
+                self.git_service.sync_state_to_branch(
+                    branch_name="agent-state",
+                    files=["data/agent_tasks.db", "data/sprint_state.json"],
+                    dry_run=is_dry_run
+                )
+            except Exception as e:
+                logger.debug(f"Agent state sync notice: {e}")
+
+        # Modules inspected
+        modules_inspected = ["sample-spring-boot-app (Java 21 Spring Boot)"]
+        if arch.has_frontend:
+            modules_inspected.append("careerpilot-ui (React 18 / TypeScript / Vite)")
+        if arch.has_ai_service:
+            modules_inspected.append("ai-service (Python Microservice)")
+
         # 6. Generate Daily Reports
         logger.info("[Step 6] Generating daily execution reports...")
         report_files = self.report_service.generate_daily_report(
@@ -179,7 +227,10 @@ class AgentOrchestrator:
             tasks=attempted_tasks,
             repo_name=f"{self.config.github.owner}/{self.config.github.repo}",
             groq_model=self.config.groq.model,
-            target_branch=self.config.github.target_branch
+            target_branch=self.config.github.target_branch,
+            sprint=sprint,
+            multi_stack_test_summary=baseline_test.output_summary,
+            modules_inspected=modules_inspected
         )
 
         logger.info(f"Report saved to: {report_files['markdown_path']}")

@@ -9,10 +9,10 @@ github:
   target_branch: "develop"
   branch_prefix: "agent/improve-"
   pull_request_enabled: true
-  auto_merge: true
+  auto_merge: false
 
 execution:
-  max_daily_tasks: 10
+  max_daily_tasks: 2
   max_repair_attempts: 2
   dry_run: false
   allowlist_extensions:

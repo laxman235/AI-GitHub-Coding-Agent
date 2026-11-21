@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Navbar from './components/Navbar.tsx';
 import StatsGrid from './components/StatsGrid.tsx';
 import JobFeed from './components/JobFeed.tsx';
