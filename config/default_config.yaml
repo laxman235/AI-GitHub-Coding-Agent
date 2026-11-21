@@ -6,7 +6,7 @@ groq:
   timeout_seconds: 60
 
 github:
-  target_branch: "main"
+  target_branch: "master"
   branch_prefix: "agent/improve-"
   pull_request_enabled: true
   auto_merge: false
