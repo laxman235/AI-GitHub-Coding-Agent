@@ -55,8 +55,11 @@ class TaskPlannerAgent:
 
         prompt = self.prompt_template.replace("{max_tasks}", str(min(remaining_budget, 10)))
 
+        vision_block = f"\nUSER PRODUCT VISION & ROADMAP:\n{arch.product_vision}\n" if arch.product_vision else ""
+
         context_text = (
             f"Project Root: {arch.root_path}\n"
+            f"{vision_block}"
             f"Controllers: {[c.relative_path for c in arch.controllers]}\n"
             f"Services: {[s.relative_path for s in arch.services]}\n"
             f"DTOs: {[d.relative_path for d in arch.dtos]}\n"

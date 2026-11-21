@@ -22,6 +22,7 @@ class RepositoryArchitecture(BaseModel):
     java_version: str = "21"
     spring_boot_version: Optional[str] = None
     build_tool: str = "Maven"
+    product_vision: str = ""
     dependencies: List[str] = Field(default_factory=list)
     controllers: List[JavaClassMetadata] = Field(default_factory=list)
     services: List[JavaClassMetadata] = Field(default_factory=list)
@@ -45,9 +46,25 @@ class RepositoryService:
         """Perform a complete static analysis of the Java Spring Boot repository."""
         arch = RepositoryArchitecture(root_path=self.root_path)
         self._parse_pom(arch)
+        self._load_product_vision(arch)
         self._scan_java_files(arch)
         self._correlate_tests(arch)
         return arch
+
+    def _load_product_vision(self, arch: RepositoryArchitecture) -> None:
+        """Load PRODUCT_PROMPT.md if present in repository root."""
+        possible_paths = [
+            os.path.join(self.root_path, "PRODUCT_PROMPT.md"),
+            os.path.join(self.root_path, "..", "PRODUCT_PROMPT.md")
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                try:
+                    with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                        arch.product_vision = f.read(15000)
+                    break
+                except Exception:
+                    pass
 
     def _parse_pom(self, arch: RepositoryArchitecture) -> None:
         """Parse pom.xml to extract Java version, Spring Boot parent, and dependencies."""
