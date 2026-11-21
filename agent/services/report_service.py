@@ -22,6 +22,7 @@ class ReportService:
         target_branch: str = "main"
     ) -> Dict[str, str]:
         """Generate both Markdown and JSON reports for this execution."""
+        os.makedirs(self.reports_dir, exist_ok=True)
         date_str = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         base_filename = f"daily_report_{date_str}_{run_record.id}"
 

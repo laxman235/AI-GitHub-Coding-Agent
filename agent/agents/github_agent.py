@@ -25,6 +25,18 @@ class GitHubAgent:
         dry_run: bool = False
     ) -> tuple[Optional[str], Optional[str]]:
         """Stage, commit, push, and open Pull Request."""
+        if dry_run:
+            logger.info(f"[Dry-Run] Simulating stage, commit, and PR creation for {task.title}")
+            commit_sha = f"simulated_sha_{task.id[:8]}"
+            pr_url = self.github_service.create_pull_request(
+                title=f"[{task.category.value}] {task.title}",
+                body=f"Dry-run verification completed for {task.title}",
+                head_branch=task.branch_name,
+                base_branch=target_branch,
+                dry_run=True
+            )
+            return commit_sha, pr_url
+
         # 1. Stage files
         self.git_service.stage_files(modified_files)
 

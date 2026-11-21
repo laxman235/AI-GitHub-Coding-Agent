@@ -125,8 +125,8 @@ class AgentOrchestrator:
             self.db.update_task(task)
             attempted_tasks.append(task)
 
-            # Isolated Branch Creation
-            if self.git_service:
+            # Isolated Branch Creation (in non-dry-run mode)
+            if self.git_service and not is_dry_run:
                 self.git_service.create_feature_branch(task.branch_name, self.config.github.target_branch)
 
             success = self._execute_task_lifecycle(task, is_dry_run)
@@ -141,7 +141,7 @@ class AgentOrchestrator:
                 failed_tasks.append(task)
                 logger.warning(f"Task {task.id} failed: {task.error_message}")
                 # Rollback changes to keep tree clean
-                if self.git_service:
+                if self.git_service and not is_dry_run:
                     self.git_service.rollback(self.config.github.target_branch)
 
         # 5. Summarize and persist run state

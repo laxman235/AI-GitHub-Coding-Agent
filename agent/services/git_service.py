@@ -90,14 +90,14 @@ class GitService:
         """Safely discard unstaged/staged changes and return to base branch."""
         try:
             self.repo.git.reset("--hard")
-            self.repo.git.clean("-fd")
+            self.repo.git.clean("-fd", "-e", "reports", "-e", "data")
             if base_branch in self.repo.heads:
                 self.repo.heads[base_branch].checkout()
-        except Exception as e:
+        except Exception:
             # Fallback to subprocess
             try:
                 subprocess.run(["git", "reset", "--hard"], cwd=self.repo_path, check=False)
-                subprocess.run(["git", "clean", "-fd"], cwd=self.repo_path, check=False)
+                subprocess.run(["git", "clean", "-fd", "-e", "reports", "-e", "data"], cwd=self.repo_path, check=False)
                 subprocess.run(["git", "checkout", base_branch], cwd=self.repo_path, check=False)
             except Exception:
                 pass
