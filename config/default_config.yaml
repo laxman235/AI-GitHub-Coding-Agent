@@ -23,6 +23,13 @@ execution:
     - ".yaml"
     - ".sql"
     - ".md"
+    - ".html"
+    - ".css"
+    - ".js"
+    - ".jsx"
+    - ".ts"
+    - ".tsx"
+    - ".json"
   denylist_paths:
     - ".env"
     - ".git"

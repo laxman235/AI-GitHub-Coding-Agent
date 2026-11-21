@@ -28,7 +28,10 @@ class ExecutionSettings(BaseModel):
     max_repair_attempts: int = 2
     dry_run: bool = False
     allowlist_extensions: List[str] = Field(
-        default_factory=lambda: [".java", ".xml", ".properties", ".yml", ".yaml", ".sql", ".md"]
+        default_factory=lambda: [
+            ".java", ".xml", ".properties", ".yml", ".yaml", ".sql", ".md",
+            ".html", ".css", ".js", ".jsx", ".ts", ".tsx", ".json"
+        ]
     )
     denylist_paths: List[str] = Field(
         default_factory=lambda: [".env", ".git", ".github", "secrets", "credentials"]

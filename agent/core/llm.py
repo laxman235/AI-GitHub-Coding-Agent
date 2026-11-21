@@ -191,6 +191,14 @@ class LLMClient:
                         "target_files": ["src/test/java/com/example/demo/service/UserServiceTest.java"],
                         "priority": 7,
                         "risk_level": "LOW"
+                    },
+                    {
+                        "title": "Implement CareerPilot AI Modern Web UI Dashboard",
+                        "category": "FEATURE",
+                        "description": "Create interactive, responsive HTML5/CSS/JavaScript single-page UI in src/main/resources/static (index.html, styles.css, app.js) providing CareerPilot AI dashboard, candidate registration, and application tracker.",
+                        "target_files": ["src/main/resources/static/index.html", "src/main/resources/static/css/styles.css", "src/main/resources/static/js/app.js"],
+                        "priority": 7,
+                        "risk_level": "LOW"
                     }
                 ]
             else:
@@ -285,6 +293,27 @@ class LLMClient:
                         }
                     ],
                     "explanation": "Created comprehensive JUnit 5 and Mockito tests for UserService."
+                })
+            elif "index.html" in prompt_lower or "web ui" in prompt_lower or "dashboard" in prompt_lower or "ui" in prompt_lower:
+                return json.dumps({
+                    "files": [
+                        {
+                            "path": "src/main/resources/static/index.html",
+                            "action": "CREATE",
+                            "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>CareerPilot AI - Autonomous Career Platform</title>\n    <link rel=\"stylesheet\" href=\"css/styles.css\">\n</head>\n<body>\n    <header class=\"navbar\">\n        <div class=\"logo\">\n            <h1>🚀 CareerPilot <span>AI</span></h1>\n        </div>\n        <nav class=\"nav-links\">\n            <a href=\"#dashboard\" class=\"active\">Dashboard</a>\n            <a href=\"#jobs\">Job Discovery</a>\n            <a href=\"#applications\">Applications</a>\n            <a href=\"#profile\">Candidate Profile</a>\n        </nav>\n    </header>\n    <main class=\"container\">\n        <section class=\"hero-section\">\n            <h2>Autonomous AI Career & Job Discovery Assistant</h2>\n            <p>Searches matching opportunities daily, optimizes resumes for ATS, and tracks your application journey.</p>\n        </section>\n        <section class=\"auth-card\" id=\"register-section\">\n            <h3>Create Candidate Account</h3>\n            <form id=\"register-form\">\n                <input type=\"text\" id=\"reg-username\" placeholder=\"Username\" required>\n                <input type=\"email\" id=\"reg-email\" placeholder=\"Email Address\" required>\n                <input type=\"password\" id=\"reg-password\" placeholder=\"Password (8+ chars)\" required>\n                <button type=\"submit\" class=\"btn-primary\">Register Account</button>\n            </form>\n            <div id=\"auth-feedback\" class=\"feedback-msg\"></div>\n        </section>\n        <section class=\"stats-grid\">\n            <div class=\"stat-box\"><h4>Discovered Jobs</h4><span class=\"stat-num\" id=\"jobs-count\">128</span></div>\n            <div class=\"stat-box\"><h4>Top Match Score</h4><span class=\"stat-num text-success\">96%</span></div>\n            <div class=\"stat-box\"><h4>Active Applications</h4><span class=\"stat-num text-primary\" id=\"apps-count\">4</span></div>\n        </section>\n    </main>\n    <script src=\"js/app.js\"></script>\n</body>\n</html>\n"
+                        },
+                        {
+                            "path": "src/main/resources/static/css/styles.css",
+                            "action": "CREATE",
+                            "content": ":root {\n    --bg: #0f172a;\n    --card-bg: #1e293b;\n    --primary: #3b82f6;\n    --text: #f8fafc;\n    --text-muted: #94a3b8;\n    --success: #10b981;\n}\n* { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }\nbody { background-color: var(--bg); color: var(--text); line-height: 1.6; }\n.navbar { display: flex; justify-content: space-between; align-items: center; padding: 1.2rem 2.5rem; background: var(--card-bg); border-bottom: 1px solid #334155; }\n.navbar .logo span { color: var(--primary); }\n.nav-links a { color: var(--text-muted); text-decoration: none; margin-left: 1.5rem; font-weight: 500; }\n.nav-links a.active, .nav-links a:hover { color: var(--text); }\n.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }\n.hero-section { text-align: center; margin-bottom: 2.5rem; }\n.hero-section h2 { font-size: 2.2rem; margin-bottom: 0.5rem; }\n.hero-section p { color: var(--text-muted); }\n.auth-card { background: var(--card-bg); padding: 1.8rem; border-radius: 10px; margin-bottom: 2rem; border: 1px solid #334155; }\n.auth-card form { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; }\n.auth-card input { flex: 1; min-width: 200px; padding: 0.75rem 1rem; border-radius: 6px; border: 1px solid #475569; background: #0f172a; color: var(--text); }\n.btn-primary { background: var(--primary); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 6px; cursor: pointer; font-weight: 600; }\n.btn-primary:hover { background: #2563eb; }\n.feedback-msg { margin-top: 1rem; font-weight: 500; }\n.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }\n.stat-box { background: var(--card-bg); padding: 1.5rem; border-radius: 10px; border: 1px solid #334155; text-align: center; }\n.stat-num { font-size: 2.2rem; font-weight: 700; display: block; margin-top: 0.5rem; }\n.text-success { color: var(--success); }\n.text-primary { color: var(--primary); }\n"
+                        },
+                        {
+                            "path": "src/main/resources/static/js/app.js",
+                            "action": "CREATE",
+                            "content": "document.addEventListener('DOMContentLoaded', () => {\n    const form = document.getElementById('register-form');\n    const feedback = document.getElementById('auth-feedback');\n    if (form) {\n        form.addEventListener('submit', async (e) => {\n            e.preventDefault();\n            const username = document.getElementById('reg-username').value;\n            const email = document.getElementById('reg-email').value;\n            const password = document.getElementById('reg-password').value;\n            feedback.textContent = 'Registering candidate...';\n            feedback.style.color = 'var(--text-muted)';\n            try {\n                const res = await fetch('/api/auth/register', {\n                    method: 'POST',\n                    headers: { 'Content-Type': 'application/json' },\n                    body: JSON.stringify({ username, email, password })\n                });\n                if (res.ok) {\n                    const data = await res.json();\n                    feedback.textContent = `Candidate '${data.username}' registered successfully!`;\n                    feedback.style.color = 'var(--success)';\n                    form.reset();\n                } else {\n                    const err = await res.json();\n                    feedback.textContent = err.message || 'Registration failed.';\n                    feedback.style.color = '#ef4444';\n                }\n            } catch (err) {\n                feedback.textContent = 'Network or server error connecting to CareerPilot backend.';\n                feedback.style.color = '#ef4444';\n            }\n        });\n    }\n});\n"
+                        }
+                    ],
+                    "explanation": "Created responsive HTML5/CSS/JavaScript CareerPilot AI single-page dashboard with candidate registration and metrics."
                 })
             else:
                 return json.dumps({
