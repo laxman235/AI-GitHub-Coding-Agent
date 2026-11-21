@@ -61,10 +61,14 @@ The platform should provide capabilities similar to Naukri and LinkedIn Jobs, en
 
 ### Module 1: User Authentication & Profile Management
 
-- [ ] User registration and login.
+- [x] User registration and login.
+- [x] User entity and Role enum (USER, ADMIN).
+- [x] User registration DTO with Bean Validation (@NotBlank, @Email, @Size).
+- [x] UserRepository with query methods.
+- [x] UserService with duplicate email & username validation.
+- [x] UserController with REST endpoints (POST /api/auth/register, GET /api/auth/users/{id}).
 - [ ] JWT authentication.
 - [ ] BCrypt password encryption.
-- [ ] User roles: USER and ADMIN.
 - [ ] Candidate profile management.
 - [ ] Store name, email, phone, location and experience.
 - [ ] Store current designation and expected salary.
