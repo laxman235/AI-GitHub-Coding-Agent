@@ -376,6 +376,31 @@ A feature is complete only when:
 - [ ] Existing functionality is not broken.
 - [ ] Product requirements are updated.
 
+
+### Module 10: CareerPilot AI Web Portal & Interactive Dashboard UI
+
+- [ ] Modern, responsive Single Page Application (SPA) dashboard served from Spring Boot static resources (`src/main/resources/static/`).
+- [ ] Navigation header with Brand Logo, Navigation Links (Dashboard, Job Discovery, Resume Optimizer, Applications, Profile), and notification badge.
+- [ ] Candidate Registration & Login UI connected to `POST /api/auth/register` with instant validation feedback.
+- [ ] Real-time Statistics Cards:
+  - Discovered Jobs counter
+  - Highest ATS Match Score (%)
+  - Active Applications in progress
+  - Upcoming Interviews counter
+- [ ] Job Discovery Feed UI:
+  - Search input for Designation and Technical Skills
+  - Location and Remote/Hybrid filters
+  - Job Cards with Match Badge (e.g., `96% Match`), Company, Experience, and Salary
+  - "Quick Apply" and "Save Job" action buttons
+- [ ] Resume Optimization & ATS Scorecard View:
+  - Visual circular/bar progress for ATS compatibility score
+  - Missing keywords chips/tags
+  - "Optimize for this Job" action trigger
+- [ ] Application Tracking Kanban / Status Board:
+  - Columns: `SAVED`, `APPLIED`, `INTERVIEW`, `OFFERED`, `REJECTED`
+  - Drag-and-drop or status dropdown for fast updates
+- [ ] Dark Mode and Mobile-responsive CSS layout.
+
 **Final Product Goal:**
 
 Build a production-ready Agentic AI Career Assistant that autonomously discovers relevant job opportunities every day, recommends the best jobs, optimizes candidate resumes, and helps candidates manage their complete job search journey.
