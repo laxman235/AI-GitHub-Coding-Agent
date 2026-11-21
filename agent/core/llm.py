@@ -136,36 +136,59 @@ class LLMClient:
                 "improvement_areas": ["Add input validation", "Global exception handling", "Comprehensive JUnit 5 tests"]
             })
         elif "Task Planner" in system_prompt:
-            return json.dumps({
-                "tasks": [
-                    {
-                        "title": "Add Bean Validation annotations to ProductDto",
-                        "category": "FEATURE",
-                        "description": "Add @NotBlank, @Positive, and @Size validations to ProductDto and @Valid in controller to prevent invalid requests.",
-                        "target_files": ["src/main/java/com/example/demo/dto/ProductDto.java", "src/main/java/com/example/demo/controller/ProductController.java"],
-                        "priority": 9,
-                        "risk_level": "LOW"
-                    },
-                    {
-                        "title": "Implement comprehensive JUnit 5 unit tests for ProductService",
-                        "category": "TEST_IMPROVEMENT",
-                        "description": "Add unit tests using Mockito verifying findById throws ResourceNotFoundException on non-existent IDs.",
-                        "target_files": ["src/test/java/com/example/demo/service/ProductServiceTest.java"],
-                        "priority": 8,
-                        "risk_level": "LOW"
-                    }
-                ]
-            })
+            task_pool = [
+                {
+                    "title": "Add Bean Validation annotations to ProductDto",
+                    "category": "FEATURE",
+                    "description": "Add @NotBlank, @Positive, and @Size validations to ProductDto and @Valid in controller to prevent invalid requests.",
+                    "target_files": ["src/main/java/com/example/demo/dto/ProductDto.java", "src/main/java/com/example/demo/controller/ProductController.java"],
+                    "priority": 9,
+                    "risk_level": "LOW"
+                },
+                {
+                    "title": "Implement comprehensive JUnit 5 unit tests for ProductService",
+                    "category": "TEST_IMPROVEMENT",
+                    "description": "Add unit tests using Mockito verifying findById throws ResourceNotFoundException on non-existent IDs.",
+                    "target_files": ["src/test/java/com/example/demo/service/ProductServiceTest.java"],
+                    "priority": 8,
+                    "risk_level": "LOW"
+                },
+                {
+                    "title": "Add global CORS configuration for REST APIs",
+                    "category": "SECURITY",
+                    "description": "Configure allowed origins and methods in WebMvcConfigurer to prevent cross-origin issues.",
+                    "target_files": ["src/main/java/com/example/demo/config/WebCorsConfig.java"],
+                    "priority": 8,
+                    "risk_level": "LOW"
+                },
+                {
+                    "title": "Add pagination and sorting support to ProductController",
+                    "category": "FEATURE",
+                    "description": "Support Spring Data Pageable in ProductController and ProductService for efficient list queries.",
+                    "target_files": ["src/main/java/com/example/demo/controller/ProductController.java", "src/main/java/com/example/demo/service/ProductService.java"],
+                    "priority": 7,
+                    "risk_level": "LOW"
+                },
+                {
+                    "title": "Implement custom exception for duplicate product names",
+                    "category": "REFACTORING",
+                    "description": "Add DuplicateResourceException and handler in GlobalExceptionHandler to improve error responses.",
+                    "target_files": ["src/main/java/com/example/demo/exception/DuplicateResourceException.java", "src/main/java/com/example/demo/exception/GlobalExceptionHandler.java"],
+                    "priority": 7,
+                    "risk_level": "LOW"
+                }
+            ]
+            return json.dumps({"tasks": task_pool})
         elif "Developer" in system_prompt:
             return json.dumps({
                 "files": [
                     {
                         "path": "src/main/java/com/example/demo/dto/ProductDto.java",
                         "action": "MODIFY",
-                        "content": "package com.example.demo.dto;\n\nimport jakarta.validation.constraints.NotBlank;\nimport jakarta.validation.constraints.Positive;\nimport jakarta.validation.constraints.Size;\nimport java.math.BigDecimal;\n\npublic record ProductDto(\n    Long id,\n    @NotBlank(message = \"Name is mandatory\")\n    @Size(min = 2, max = 100, message = \"Name must be between 2 and 100 characters\")\n    String name,\n    @Positive(message = \"Price must be greater than zero\")\n    BigDecimal price\n) {}\n"
+                        "content": "package com.example.demo.dto;\n\nimport jakarta.validation.constraints.NotBlank;\nimport jakarta.validation.constraints.NotNull;\nimport jakarta.validation.constraints.Positive;\nimport jakarta.validation.constraints.Size;\nimport java.math.BigDecimal;\n\npublic record ProductDto(\n    Long id,\n    @NotBlank(message = \"Product name cannot be blank\")\n    @Size(min = 2, max = 100, message = \"Product name must be between 2 and 100 characters\")\n    String name,\n    @NotNull(message = \"Price is required\")\n    @Positive(message = \"Price must be greater than zero\")\n    BigDecimal price,\n    @Size(max = 500, message = \"Description cannot exceed 500 characters\")\n    String description\n) {}\n"
                     }
                 ],
-                "explanation": "Added Bean Validation annotations to ProductDto."
+                "explanation": "Added Bean Validation annotations to ProductDto retaining all fields."
             })
         elif "Reviewer" in system_prompt:
             return json.dumps({

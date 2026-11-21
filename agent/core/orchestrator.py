@@ -145,9 +145,15 @@ class AgentOrchestrator:
                     self.git_service.rollback(self.config.github.target_branch)
 
         # 5. Summarize and persist run state
-        final_status = RunStatus.SUCCESS if len(completed_tasks) == len(attempted_tasks) and attempted_tasks else (
-            RunStatus.PARTIAL_SUCCESS if completed_tasks else RunStatus.FAILED
-        )
+        if not attempted_tasks:
+            final_status = RunStatus.SUCCESS
+            logger.info("No new or uncompleted tasks found for this cycle. Repository is up-to-date!")
+        elif len(completed_tasks) == len(attempted_tasks):
+            final_status = RunStatus.SUCCESS
+        elif completed_tasks:
+            final_status = RunStatus.PARTIAL_SUCCESS
+        else:
+            final_status = RunStatus.FAILED
 
         self.db.finish_run(
             run_id=run_id,
@@ -194,6 +200,14 @@ class AgentOrchestrator:
         """Execute developer -> test -> repair -> review -> git publish lifecycle for a task."""
         modified_paths: List[str] = []
 
+        # Keep backups of files to cleanly restore in dry-run mode or on failure
+        file_backups = {}
+        for f_path in task.target_files:
+            try:
+                file_backups[f_path] = self.repo_service.read_file_safe(f_path)
+            except Exception:
+                file_backups[f_path] = None
+
         try:
             # Step A: Developer Agent generates solution
             logger.info("-> Invoking Developer Agent...")
@@ -201,6 +215,12 @@ class AgentOrchestrator:
 
             # Step B: Validate and apply file operations
             for f_op in solution.files:
+                if f_op.path not in file_backups:
+                    try:
+                        file_backups[f_op.path] = self.repo_service.read_file_safe(f_op.path)
+                    except Exception:
+                        file_backups[f_op.path] = None
+
                 self.repo_service.write_file_safe(
                     f_op.path,
                     f_op.content,
@@ -234,6 +254,8 @@ class AgentOrchestrator:
             if not test_res.success:
                 task.status = TaskStatus.BUILD_FAILED if not test_res.compilation_success else TaskStatus.TEST_FAILED
                 task.error_message = f"Tests failed after {repair_attempts} repairs: {test_res.output_summary}"
+                # Restore original file states on failure
+                self._restore_backups(file_backups)
                 return False
 
             # Step E: Code Reviewer Agent validates the diff
@@ -245,6 +267,8 @@ class AgentOrchestrator:
             if not review.approved or review.score < 7:
                 task.status = TaskStatus.REVIEW_REJECTED
                 task.error_message = f"Review rejected (Score: {review.score}/10). Comments: {', '.join(review.comments)}"
+                # Restore original file states on reject
+                self._restore_backups(file_backups)
                 return False
 
             # Step F: GitHub Agent stages, commits, pushes, and opens PR
@@ -264,10 +288,31 @@ class AgentOrchestrator:
                 task.pr_url = f"https://github.com/{self.config.github.owner}/{self.config.github.repo}/pull/simulated"
 
             task.status = TaskStatus.COMPLETED
+
+            # If dry_run, restore files so working tree remains pristine
+            if dry_run:
+                self._restore_backups(file_backups)
+
             return True
 
         except Exception as e:
             logger.error(f"Task lifecycle error: {e}", exc_info=True)
             task.status = TaskStatus.FAILED
             task.error_message = str(e)
+            self._restore_backups(file_backups)
             return False
+
+    def _restore_backups(self, backups: dict) -> None:
+        """Safely restore file backups."""
+        for rel_path, content in backups.items():
+            try:
+                full_path = os.path.join(self.target_path, rel_path)
+                if content is None:
+                    if os.path.exists(full_path):
+                        os.remove(full_path)
+                else:
+                    os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                    with open(full_path, "w", encoding="utf-8") as f:
+                        f.write(content)
+            except Exception:
+                pass
