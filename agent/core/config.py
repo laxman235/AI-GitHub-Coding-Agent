@@ -90,6 +90,8 @@ def load_config(config_file: Optional[str] = None) -> AgentConfig:
         config.github.repo = os.getenv("REPO_NAME")
     if os.getenv("TARGET_BRANCH"):
         config.github.target_branch = os.getenv("TARGET_BRANCH")
+    if os.getenv("AUTO_MERGE"):
+        config.github.auto_merge = os.getenv("AUTO_MERGE", "true").lower() in ("true", "1", "yes")
 
     if os.getenv("MAX_DAILY_TASKS"):
         try:
