@@ -1,0 +1,39 @@
+# Configuration for Autonomous AI GitHub Coding Agent
+groq:
+  model: "llama-3.3-70b-versatile"
+  temperature: 0.1
+  max_retries: 3
+  timeout_seconds: 60
+
+github:
+  target_branch: "main"
+  branch_prefix: "agent/improve-"
+  pull_request_enabled: true
+  auto_merge: false
+
+execution:
+  max_daily_tasks: 10
+  max_repair_attempts: 2
+  dry_run: false
+  allowlist_extensions:
+    - ".java"
+    - ".xml"
+    - ".properties"
+    - ".yml"
+    - ".yaml"
+    - ".sql"
+    - ".md"
+  denylist_paths:
+    - ".env"
+    - ".git"
+    - ".github"
+    - "secrets"
+    - "credentials"
+    - "id_rsa"
+    - "*.key"
+
+database:
+  db_path: "data/agent_tasks.db"
+
+reports:
+  output_dir: "reports"

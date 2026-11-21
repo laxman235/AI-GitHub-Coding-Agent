@@ -1,0 +1,115 @@
+name: Daily Autonomous Coding Agent
+
+on:
+  schedule:
+    # 9:00 AM IST = 3:30 AM UTC
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in Dry-Run mode (no remote git push / simulated PRs)'
+        required: true
+        type: boolean
+        default: false
+      max_tasks:
+        description: 'Maximum tasks to attempt in this run (up to 10)'
+        required: true
+        type: number
+        default: 10
+      target_path:
+        description: 'Relative path to Java Spring Boot application'
+        required: false
+        type: string
+        default: 'sample-spring-boot-app'
+
+concurrency:
+  group: autonomous-agent-execution
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  run-autonomous-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git User
+        run: |
+          git config user.name "Autonomous AI Coding Agent"
+          git config user.email "agent@users.noreply.github.com"
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'maven'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore SQLite Task History Cache
+        uses: actions/cache/restore@v4
+        id: db-cache
+        with:
+          path: data/agent_tasks.db
+          key: agent-db-${{ github.run_id }}
+          restore-keys: |
+            agent-db-
+
+      - name: Run Autonomous AI Coding Agent
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL || 'llama-3.3-70b-versatile' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO_OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.repository.name }}
+          TARGET_BRANCH: 'main'
+          TARGET_REPO_PATH: ${{ github.event.inputs.target_path || 'sample-spring-boot-app' }}
+          MAX_DAILY_TASKS: ${{ github.event.inputs.max_tasks || 10 }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || false }}
+        run: |
+          python -m agent.main --verbose
+
+      - name: Save Updated SQLite Task History Cache
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: data/agent_tasks.db
+          key: agent-db-${{ github.run_id }}
+
+      - name: Upload Daily Execution Reports & Logs
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-agent-reports-${{ github.run_id }}
+          path: |
+            reports/
+            data/agent_tasks.db
+          retention-days: 30
+
+      - name: Publish Daily Summary to GitHub Actions Job Summary
+        if: always()
+        run: |
+          LATEST_REPORT=$(ls -t reports/*.md 2>/dev/null | head -n 1)
+          if [ -f "$LATEST_REPORT" ]; then
+            cat "$LATEST_REPORT" >> $GITHUB_STEP_SUMMARY
+          fi
