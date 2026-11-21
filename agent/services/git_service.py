@@ -71,7 +71,26 @@ class GitService:
     def stage_files(self, file_paths: List[str]) -> None:
         """Stage specified file paths."""
         for path in file_paths:
-            rel_path = os.path.relpath(os.path.join(self.repo_path, path), self.repo_path)
+            full_path = path if os.path.isabs(path) else os.path.join(self.repo_path, path)
+            if not os.path.exists(full_path):
+                # Search inside subdirectories (e.g. sample-spring-boot-app)
+                resolved = False
+                for sub in ["sample-spring-boot-app", "app"]:
+                    candidate = os.path.join(self.repo_path, sub, path)
+                    if os.path.exists(candidate):
+                        full_path = candidate
+                        resolved = True
+                        break
+                if not resolved:
+                    for root, dirs, files in os.walk(self.repo_path):
+                        if ".git" in dirs:
+                            dirs.remove(".git")
+                        candidate = os.path.join(root, path)
+                        if os.path.exists(candidate):
+                            full_path = candidate
+                            resolved = True
+                            break
+            rel_path = os.path.relpath(full_path, self.repo_path)
             self.repo.git.add(rel_path)
 
     def commit(self, message: str) -> str:

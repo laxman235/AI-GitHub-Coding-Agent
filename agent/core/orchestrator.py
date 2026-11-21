@@ -226,7 +226,9 @@ class AgentOrchestrator:
                     f_op.content,
                     self.config.execution.allowlist_extensions
                 )
-                modified_paths.append(f_op.path)
+                full_written_path = os.path.join(self.target_path, f_op.path)
+                repo_rel_path = os.path.relpath(full_written_path, self.repo_root)
+                modified_paths.append(repo_rel_path)
 
             # Step C: Testing Agent verifies compilation & tests
             logger.info("-> Invoking Testing Agent (Maven compile and test)...")
@@ -248,6 +250,10 @@ class AgentOrchestrator:
                         f_op.content,
                         self.config.execution.allowlist_extensions
                     )
+                    full_written_path = os.path.join(self.target_path, f_op.path)
+                    repo_rel_path = os.path.relpath(full_written_path, self.repo_root)
+                    if repo_rel_path not in modified_paths:
+                        modified_paths.append(repo_rel_path)
 
                 test_res = self.tester_agent.run_tests()
 

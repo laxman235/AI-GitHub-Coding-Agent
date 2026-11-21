@@ -242,7 +242,7 @@ class LLMClient:
                     ],
                     "explanation": "Created UserRegistrationDto with Bean Validation constraints."
                 })
-            elif "userrepository" in prompt_lower or "repository" in prompt_lower and "user" in prompt_lower:
+            elif "userrepository" in prompt_lower or "user repository" in prompt_lower:
                 return json.dumps({
                     "files": [
                         {
@@ -253,7 +253,7 @@ class LLMClient:
                     ],
                     "explanation": "Created UserRepository with custom query methods."
                 })
-            elif "userservice" in prompt_lower and "test" not in prompt_lower:
+            elif ("userservice" in prompt_lower or "user service" in prompt_lower) and "userservicetest" not in prompt_lower and "category: test_improvement" not in prompt_lower:
                 return json.dumps({
                     "files": [
                         {
@@ -264,7 +264,7 @@ class LLMClient:
                     ],
                     "explanation": "Created UserService with duplicate checks and transaction boundaries."
                 })
-            elif "usercontroller" in prompt_lower:
+            elif "usercontroller" in prompt_lower or "user controller" in prompt_lower:
                 return json.dumps({
                     "files": [
                         {
