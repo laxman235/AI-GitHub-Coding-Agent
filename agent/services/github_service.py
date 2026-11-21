@@ -55,7 +55,8 @@ class GitHubService:
             if response.status_code == 201:
                 pr_data = response.json()
                 html_url = pr_data.get("html_url")
-                logger.info(f"Successfully opened Pull Request: {html_url}")
+                pr_num = pr_data.get("number")
+                logger.info(f"Successfully opened Pull Request #{pr_num}: {html_url}")
                 return html_url
             else:
                 logger.error(f"Failed to create PR ({response.status_code}): {response.text}")
@@ -63,3 +64,19 @@ class GitHubService:
         except Exception as e:
             logger.error(f"Error calling GitHub PR API: {e}")
             return None
+
+    def merge_pull_request(self, pr_number: int, commit_title: str) -> bool:
+        """Merge a pull request via GitHub REST API."""
+        if not self.is_configured:
+            return True
+
+        url = f"{self.base_url}/pulls/{pr_number}/merge"
+        payload = {
+            "commit_title": commit_title,
+            "merge_method": "squash"
+        }
+        try:
+            res = requests.put(url, json=payload, headers=self._headers(), timeout=30)
+            return res.status_code == 200
+        except Exception:
+            return False

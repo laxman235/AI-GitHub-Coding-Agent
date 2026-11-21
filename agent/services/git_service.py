@@ -102,6 +102,22 @@ class GitService:
             except Exception:
                 pass
 
+    def merge_feature_to_target(self, feature_branch: str, target_branch: str = "develop") -> bool:
+        """Merge verified feature branch into target branch (e.g. develop)."""
+        try:
+            if target_branch in self.repo.heads:
+                self.repo.heads[target_branch].checkout()
+            else:
+                try:
+                    self.repo.git.checkout("-b", target_branch, f"origin/{target_branch}")
+                except Exception:
+                    self.repo.git.checkout("-b", target_branch)
+
+            self.repo.git.merge(feature_branch, "--no-ff", "-m", f"merge: auto-merge approved {feature_branch} into {target_branch}")
+            return True
+        except Exception as e:
+            return False
+
     def push_branch(self, branch_name: str, remote_name: str = "origin", dry_run: bool = False) -> bool:
         """Push branch to remote. NEVER force-push. NEVER push to main directly."""
         if branch_name in ["main", "master", "release"]:

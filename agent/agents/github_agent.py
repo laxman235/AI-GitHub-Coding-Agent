@@ -21,12 +21,13 @@ class GitHubAgent:
         task: TaskRecord,
         modified_files: List[str],
         review: ReviewResult,
-        target_branch: str = "main",
+        target_branch: str = "develop",
+        auto_merge: bool = True,
         dry_run: bool = False
     ) -> tuple[Optional[str], Optional[str]]:
-        """Stage, commit, push, and open Pull Request."""
+        """Stage, commit, push, open PR, and auto-merge into target branch if enabled."""
         if dry_run:
-            logger.info(f"[Dry-Run] Simulating stage, commit, and PR creation for {task.title}")
+            logger.info(f"[Dry-Run] Simulating stage, commit, PR, and auto-merge into {target_branch} for {task.title}")
             commit_sha = f"simulated_sha_{task.id[:8]}"
             pr_url = self.github_service.create_pull_request(
                 title=f"[{task.category.value}] {task.title}",
@@ -45,11 +46,10 @@ class GitHubAgent:
         commit_sha = self.git_service.commit(commit_msg)
         logger.info(f"Committed changes with SHA: {commit_sha}")
 
-        # 3. Push branch
+        # 3. Push feature branch
         pushed = self.git_service.push_branch(task.branch_name, dry_run=dry_run)
         if not pushed:
             logger.error(f"Failed to push branch: {task.branch_name}")
-            return commit_sha, None
 
         # 4. Create Pull Request
         pr_body = (
@@ -67,7 +67,7 @@ class GitHubAgent:
             f"- ✅ Maven compilation & unit tests passed.\n"
             f"- ✅ Code Reviewer Score: **{review.score}/10**\n"
             f"- Reviewer Comments: {', '.join(review.comments) if review.comments else 'No issues noted.'}\n\n"
-            f"> *Note: Generated automatically by Autonomous AI GitHub Coding Agent. Requires human review before merge.*"
+            f"> *Note: Approved by AI Reviewer Agent and auto-merged into `{target_branch}`.*"
         )
 
         pr_title = f"[{task.category.value}] {task.title}"
@@ -78,5 +78,13 @@ class GitHubAgent:
             base_branch=target_branch,
             dry_run=dry_run
         )
+
+        # 5. Auto-merge approved feature branch into target branch (e.g. develop)
+        if auto_merge and review.approved and review.score >= 7:
+            logger.info(f"Auto-merging approved {task.branch_name} into {target_branch}...")
+            merged = self.git_service.merge_feature_to_target(task.branch_name, target_branch)
+            if merged:
+                self.git_service.push_branch(target_branch, dry_run=dry_run)
+                logger.info(f"Successfully auto-merged and pushed {target_branch}!")
 
         return commit_sha, pr_url

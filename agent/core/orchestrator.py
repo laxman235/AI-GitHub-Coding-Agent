@@ -279,6 +279,7 @@ class AgentOrchestrator:
                     modified_files=modified_paths,
                     review=review,
                     target_branch=self.config.github.target_branch,
+                    auto_merge=self.config.github.auto_merge,
                     dry_run=dry_run
                 )
                 task.commit_sha = commit_sha

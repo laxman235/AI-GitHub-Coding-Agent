@@ -82,7 +82,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_OWNER: ${{ github.repository_owner }}
           REPO_NAME: ${{ github.event.repository.name }}
-          TARGET_BRANCH: 'master'
+          TARGET_BRANCH: 'develop'
           TARGET_REPO_PATH: ${{ github.event.inputs.target_path || 'sample-spring-boot-app' }}
           MAX_DAILY_TASKS: ${{ github.event.inputs.max_tasks || 10 }}
           DRY_RUN: ${{ github.event.inputs.dry_run || false }}
