@@ -61,7 +61,7 @@ class RepositoryService:
             if os.path.exists(path):
                 try:
                     with open(path, "r", encoding="utf-8", errors="ignore") as f:
-                        arch.product_vision = f.read(15000)
+                        arch.product_vision = f.read(50000)
                     break
                 except Exception:
                     pass
