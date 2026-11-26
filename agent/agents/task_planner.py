@@ -57,7 +57,8 @@ class TaskPlannerAgent:
         arch: RepositoryArchitecture,
         findings: AnalystFindings,
         run_id: str,
-        max_tasks: int = 2
+        max_tasks: int = 2,
+        ignore_daily_cap: bool = False
     ) -> List[TaskRecord]:
         """Generate deduplicated tasks up to the daily execution ceiling (max 2 tasks/day)."""
         sprint = self.db.get_or_create_active_sprint()
@@ -69,9 +70,12 @@ class TaskPlannerAgent:
 
         completed_titles = self.db.get_completed_task_titles()
         today_completed = self.db.get_today_completed_count()
-        # Strictly cap daily execution limit at 2 tasks
-        daily_cap = min(max_tasks, 2)
-        remaining_budget = max(0, daily_cap - today_completed)
+
+        if ignore_daily_cap:
+            remaining_budget = min(max_tasks, 2)
+        else:
+            daily_cap = min(max_tasks, 2)
+            remaining_budget = max(0, daily_cap - today_completed)
 
         if remaining_budget <= 0:
             return []

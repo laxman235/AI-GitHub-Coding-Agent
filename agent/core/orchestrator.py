@@ -88,7 +88,7 @@ class AgentOrchestrator:
         self.reviewer_agent = CodeReviewerAgent(self.llm)
         self.github_agent = GitHubAgent(self.git_service, self.github_service) if self.git_service else None
 
-    def execute(self, max_tasks: Optional[int] = None, dry_run: Optional[bool] = None) -> ExecutionSummary:
+    def execute(self, max_tasks: Optional[int] = None, dry_run: Optional[bool] = None, ignore_daily_cap: bool = False) -> ExecutionSummary:
         """Run the daily autonomous coding cycle."""
         is_dry_run = dry_run if dry_run is not None else self.config.execution.dry_run
         daily_limit = max_tasks if max_tasks is not None else self.config.execution.max_daily_tasks
@@ -112,7 +112,7 @@ class AgentOrchestrator:
 
         # 3. Agent 2: Task Planner
         logger.info(f"[Step 3] Invoking Task Planner Agent (Limit: {daily_limit} tasks)...")
-        tasks = self.planner_agent.plan_tasks(arch, findings, run_id, max_tasks=daily_limit)
+        tasks = self.planner_agent.plan_tasks(arch, findings, run_id, max_tasks=daily_limit, ignore_daily_cap=ignore_daily_cap)
         logger.info(f"Planned {len(tasks)} actionable tasks.")
 
         attempted_tasks: List[TaskRecord] = []
