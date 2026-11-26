@@ -185,6 +185,30 @@ class LLMClient:
                         "risk_level": "LOW"
                     },
                     {
+                        "title": "Implement Job entity and JobRepository for CareerPilot AI job discovery",
+                        "category": "FEATURE",
+                        "description": "Create Job JPA entity (title, company, location, salary, experience, skills, description, originalUrl, postedDate) and JobRepository with title and skill search queries to satisfy Day 3 Job Discovery requirements.",
+                        "target_files": ["src/main/java/com/example/demo/model/Job.java", "src/main/java/com/example/demo/repository/JobRepository.java"],
+                        "priority": 9,
+                        "risk_level": "LOW"
+                    },
+                    {
+                        "title": "Implement JobDto, JobService and JobController for CareerPilot AI job discovery",
+                        "category": "FEATURE",
+                        "description": "Create JobDto, JobService with search and filter capabilities, and JobController exposing GET /api/jobs and POST /api/jobs.",
+                        "target_files": ["src/main/java/com/example/demo/dto/JobDto.java", "src/main/java/com/example/demo/service/JobService.java", "src/main/java/com/example/demo/controller/JobController.java"],
+                        "priority": 8,
+                        "risk_level": "LOW"
+                    },
+                    {
+                        "title": "Implement AtsMatchResultDto and AtsScorerService for semantic resume matching",
+                        "category": "FEATURE",
+                        "description": "Create AtsMatchResultDto and AtsScorerService to compute percentage ATS match score and extract matching skills between candidate resumes and job postings.",
+                        "target_files": ["src/main/java/com/example/demo/dto/AtsMatchResultDto.java", "src/main/java/com/example/demo/service/AtsScorerService.java", "src/main/java/com/example/demo/controller/AtsScorerController.java"],
+                        "priority": 8,
+                        "risk_level": "LOW"
+                    },
+                    {
                         "title": "Implement comprehensive JUnit 5 and Mockito unit tests for UserService",
                         "category": "TEST_IMPROVEMENT",
                         "description": "Create UserServiceTest verifying successful registration and duplicate email rejection.",
@@ -282,6 +306,59 @@ class LLMClient:
                         }
                     ],
                     "explanation": "Created UserController with REST registration endpoint."
+                })
+            elif "job.java" in prompt_lower or "job entity" in prompt_lower or "jobrepository" in prompt_lower or "job repository" in prompt_lower:
+                return json.dumps({
+                    "files": [
+                        {
+                            "path": "src/main/java/com/example/demo/model/Job.java",
+                            "action": "CREATE",
+                            "content": "package com.example.demo.model;\n\nimport jakarta.persistence.*;\nimport java.time.LocalDateTime;\n\n@Entity\n@Table(name = \"jobs\")\npublic class Job {\n\n    @Id\n    @GeneratedValue(strategy = GenerationType.IDENTITY)\n    private Long id;\n\n    @Column(nullable = false)\n    private String title;\n\n    @Column(nullable = false)\n    private String company;\n\n    @Column(nullable = false)\n    private String location;\n\n    private String salary;\n    private String experience;\n\n    @Column(length = 1000)\n    private String skills;\n\n    @Column(length = 2000)\n    private String description;\n\n    private String originalUrl;\n\n    @Column(nullable = false, updatable = false)\n    private LocalDateTime postedDate;\n\n    public Job() {\n        this.postedDate = LocalDateTime.now();\n    }\n\n    public Job(String title, String company, String location, String salary, String experience, String skills, String description, String originalUrl) {\n        this.title = title;\n        this.company = company;\n        this.location = location;\n        this.salary = salary;\n        this.experience = experience;\n        this.skills = skills;\n        this.description = description;\n        this.originalUrl = originalUrl;\n        this.postedDate = LocalDateTime.now();\n    }\n\n    public Long getId() { return id; }\n    public void setId(Long id) { this.id = id; }\n    public String getTitle() { return title; }\n    public void setTitle(String title) { this.title = title; }\n    public String getCompany() { return company; }\n    public void setCompany(String company) { this.company = company; }\n    public String getLocation() { return location; }\n    public void setLocation(String location) { this.location = location; }\n    public String getSalary() { return salary; }\n    public void setSalary(String salary) { this.salary = salary; }\n    public String getExperience() { return experience; }\n    public void setExperience(String experience) { this.experience = experience; }\n    public String getSkills() { return skills; }\n    public void setSkills(String skills) { this.skills = skills; }\n    public String getDescription() { return description; }\n    public void setDescription(String description) { this.description = description; }\n    public String getOriginalUrl() { return originalUrl; }\n    public void setOriginalUrl(String originalUrl) { this.originalUrl = originalUrl; }\n    public LocalDateTime getPostedDate() { return postedDate; }\n    public void setPostedDate(LocalDateTime postedDate) { this.postedDate = postedDate; }\n}\n"
+                        },
+                        {
+                            "path": "src/main/java/com/example/demo/repository/JobRepository.java",
+                            "action": "CREATE",
+                            "content": "package com.example.demo.repository;\n\nimport com.example.demo.model.Job;\nimport org.springframework.data.jpa.repository.JpaRepository;\nimport org.springframework.stereotype.Repository;\nimport java.util.List;\n\n@Repository\npublic interface JobRepository extends JpaRepository<Job, Long> {\n    List<Job> findByTitleContainingIgnoreCase(String title);\n    List<Job> findBySkillsContainingIgnoreCase(String skill);\n    List<Job> findByLocationContainingIgnoreCase(String location);\n}\n"
+                        }
+                    ],
+                    "explanation": "Created Job entity and JobRepository for CareerPilot AI job discovery engine."
+                })
+            elif "jobdto" in prompt_lower or "jobservice" in prompt_lower or "jobcontroller" in prompt_lower or "job service" in prompt_lower:
+                return json.dumps({
+                    "files": [
+                        {
+                            "path": "src/main/java/com/example/demo/dto/JobDto.java",
+                            "action": "CREATE",
+                            "content": "package com.example.demo.dto;\n\nimport jakarta.validation.constraints.NotBlank;\nimport java.time.LocalDateTime;\n\npublic record JobDto(\n    Long id,\n    @NotBlank(message = \"Job title is required\")\n    String title,\n    @NotBlank(message = \"Company is required\")\n    String company,\n    @NotBlank(message = \"Location is required\")\n    String location,\n    String salary,\n    String experience,\n    String skills,\n    String description,\n    String originalUrl,\n    LocalDateTime postedDate\n) {}\n"
+                        },
+                        {
+                            "path": "src/main/java/com/example/demo/service/JobService.java",
+                            "action": "CREATE",
+                            "content": "package com.example.demo.service;\n\nimport com.example.demo.dto.JobDto;\nimport com.example.demo.exception.ResourceNotFoundException;\nimport com.example.demo.model.Job;\nimport com.example.demo.repository.JobRepository;\nimport org.springframework.stereotype.Service;\nimport org.springframework.transaction.annotation.Transactional;\nimport java.util.List;\n\n@Service\n@Transactional\npublic class JobService {\n\n    private final JobRepository jobRepository;\n\n    public JobService(JobRepository jobRepository) {\n        this.jobRepository = jobRepository;\n    }\n\n    public Job createJob(JobDto dto) {\n        Job job = new Job(\n            dto.title(),\n            dto.company(),\n            dto.location(),\n            dto.salary(),\n            dto.experience(),\n            dto.skills(),\n            dto.description(),\n            dto.originalUrl()\n        );\n        return jobRepository.save(job);\n    }\n\n    @Transactional(readOnly = true)\n    public List<Job> getAllJobs() {\n        return jobRepository.findAll();\n    }\n\n    @Transactional(readOnly = true)\n    public Job getJobById(Long id) {\n        return jobRepository.findById(id)\n            .orElseThrow(() -> new ResourceNotFoundException(\"Job not found with id: \" + id));\n    }\n\n    @Transactional(readOnly = true)\n    public List<Job> searchJobs(String query) {\n        if (query == null || query.isBlank()) {\n            return jobRepository.findAll();\n        }\n        return jobRepository.findByTitleContainingIgnoreCase(query.trim());\n    }\n}\n"
+                        },
+                        {
+                            "path": "src/main/java/com/example/demo/controller/JobController.java",
+                            "action": "CREATE",
+                            "content": "package com.example.demo.controller;\n\nimport com.example.demo.dto.JobDto;\nimport com.example.demo.model.Job;\nimport com.example.demo.service.JobService;\nimport jakarta.validation.Valid;\nimport org.springframework.http.HttpStatus;\nimport org.springframework.http.ResponseEntity;\nimport org.springframework.web.bind.annotation.*;\nimport java.util.List;\n\n@RestController\n@RequestMapping(\"/api/jobs\")\npublic class JobController {\n\n    private final JobService jobService;\n\n    public JobController(JobService jobService) {\n        this.jobService = jobService;\n    }\n\n    @GetMapping\n    public ResponseEntity<List<Job>> getAllJobs(@RequestParam(required = false) String search) {\n        if (search != null && !search.isBlank()) {\n            return ResponseEntity.ok(jobService.searchJobs(search));\n        }\n        return ResponseEntity.ok(jobService.getAllJobs());\n    }\n\n    @GetMapping(\"/{id}\")\n    public ResponseEntity<Job> getJobById(@PathVariable Long id) {\n        return ResponseEntity.ok(jobService.getJobById(id));\n    }\n\n    @PostMapping\n    public ResponseEntity<Job> createJob(@Valid @RequestBody JobDto dto) {\n        Job created = jobService.createJob(dto);\n        return ResponseEntity.status(HttpStatus.CREATED).body(created);\n    }\n}\n"
+                        }
+                    ],
+                    "explanation": "Created JobDto, JobService and JobController with search and create endpoints."
+                })
+            elif "atsscorer" in prompt_lower or "ats" in prompt_lower or "match" in prompt_lower:
+                return json.dumps({
+                    "files": [
+                        {
+                            "path": "src/main/java/com/example/demo/dto/AtsMatchResultDto.java",
+                            "action": "CREATE",
+                            "content": "package com.example.demo.dto;\n\nimport java.util.List;\n\npublic record AtsMatchResultDto(\n    Long jobId,\n    String jobTitle,\n    int matchScore,\n    List<String> matchedSkills,\n    List<String> missingSkills,\n    String recommendationLevel\n) {}\n"
+                        },
+                        {
+                            "path": "src/main/java/com/example/demo/service/AtsScorerService.java",
+                            "action": "CREATE",
+                            "content": "package com.example.demo.service;\n\nimport com.example.demo.dto.AtsMatchResultDto;\nimport com.example.demo.model.Job;\nimport org.springframework.stereotype.Service;\nimport java.util.*;\n\n@Service\npublic class AtsScorerService {\n\n    public AtsMatchResultDto evaluateMatch(Job job, List<String> candidateSkills) {\n        if (job.getSkills() == null || job.getSkills().isBlank() || candidateSkills == null || candidateSkills.isEmpty()) {\n            return new AtsMatchResultDto(job.getId(), job.getTitle(), 50, List.of(), List.of(), \"MEDIUM\");\n        }\n        Set<String> required = new HashSet<>();\n        for (String s : job.getSkills().split(\",\")) {\n            required.add(s.trim().toLowerCase());\n        }\n        List<String> matched = new ArrayList<>();\n        List<String> missing = new ArrayList<>();\n        for (String req : required) {\n            boolean found = candidateSkills.stream().anyMatch(cs -> cs.trim().equalsIgnoreCase(req));\n            if (found) {\n                matched.add(req);\n            } else {\n                missing.add(req);\n            }\n        }\n        int score = required.isEmpty() ? 70 : (int) Math.round(((double) matched.size() / required.size()) * 100);\n        String level = score >= 80 ? \"HIGH\" : score >= 50 ? \"MEDIUM\" : \"LOW\";\n        return new AtsMatchResultDto(job.getId(), job.getTitle(), score, matched, missing, level);\n    }\n}\n"
+                        }
+                    ],
+                    "explanation": "Created AtsMatchResultDto and AtsScorerService calculating match percentages and missing skills."
                 })
             elif "userservicetest" in prompt_lower or "unit test" in prompt_lower and "user" in prompt_lower:
                 return json.dumps({
