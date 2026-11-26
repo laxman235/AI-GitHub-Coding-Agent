@@ -1,207 +1,207 @@
-# 🤖 Autonomous AI GitHub Coding Agent (Java Spring Boot)
+# 🚀 CareerPilot AI & Autonomous Coding Agent
 
-An autonomous multi-agent developer system built with Python, Groq LLM API, LangChain, Git, and Maven. It connects to your Java Spring Boot repository, understands the existing architecture, identifies meaningful improvements, writes clean Java 21 code, executes Maven tests, repairs failures, conducts independent code reviews, commits to dedicated feature branches, and opens GitHub Pull Requests.
+<div align="center">
+
+[![Firebase Hosting](https://img.shields.io/badge/Frontend-Firebase%20Hosting-FFCA28?logo=firebase&logoColor=black)](https://careerpilot-ai-cd651.web.app)
+[![Render Backend](https://img.shields.io/badge/Backend-Render%20Cloud-46E3B7?logo=render&logoColor=black)](https://careerpilot-backend-sq7w.onrender.com)
+[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+[![Spring Boot 3.3](https://img.shields.io/badge/Spring%20Boot-3.3.0-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React 18](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Groq LLM](https://img.shields.io/badge/AI%20Model-Llama--3.3--70B-F05032?logo=groq&logoColor=white)](https://groq.com)
+[![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](https://github.com/laxman235/AI-GitHub-Coding-Agent/actions)
+
+**An autonomous multi-agent developer system that engineers, tests, and deploys a multi-stack AI Career Platform.**
+
+[🌐 Live Web Application](https://careerpilot-ai-cd651.web.app) • [⚙️ Live Backend API](https://careerpilot-backend-sq7w.onrender.com) • [📋 Product Vision & Roadmap](PRODUCT_PROMPT.md)
+
+</div>
+
+---
+
+## 🌟 Overview
+
+This repository houses two tightly integrated systems:
+
+1. **🤖 The Autonomous AI GitHub Coding Agent**: An autonomous multi-agent engineering team (Repository Analyst, Task Planner, Developer, Stack-Aware Tester, Code Reviewer, and GitHub Agent) powered by Python, Groq LLMs (Llama 3.3 70B), and GitHub Actions. Every day, it inspects the codebase, plans prioritized sprint tasks, writes clean code, verifies test suites, and opens Pull Requests.
+2. **💼 CareerPilot AI (The Live Application)**: A modern, AI-powered career acceleration platform built with a **Java 21 Spring Boot 3** backend and a **React 18 / TypeScript / Vite** frontend. Features include candidate authentication, daily job discovery, semantic ATS resume scoring, and application tracking.
+
+---
+
+## 🌐 Live Deployments
+
+| Component | Platform | URL | Status |
+| :--- | :--- | :--- | :--- |
+| **Frontend UI** | Firebase Hosting | [careerpilot-ai-cd651.web.app](https://careerpilot-ai-cd651.web.app) | ![Online](https://img.shields.io/badge/Live-BrightGreen) |
+| **Backend API** | Render Cloud (Docker) | [careerpilot-backend-sq7w.onrender.com](https://careerpilot-backend-sq7w.onrender.com) | ![Online](https://img.shields.io/badge/Live-BrightGreen) |
+| **Health Check** | Spring Boot REST | [careerpilot-backend-sq7w.onrender.com/api/health](https://careerpilot-backend-sq7w.onrender.com/api/health) | `{"status":"UP"}` |
 
 ---
 
 ## 🏗️ Multi-Agent Architecture
 
 ```
-                                  +----------------------------+
-                                  |     Java Spring Boot       |
-                                  |   Application (Java 21)    |
-                                  +--------------+-------------+
-                                                 |
-                                                 v
-+-----------------------+             +-----------------------+
-|  Task Database        | <========== | Agent 1: Repo Analyst |
-|  (SQLite Persistence) |             | Static AST / Pom scan |
-+-----------+-----------+             +-----------+-----------+
-            |                                     |
-            +----------------+  +-----------------+
-                             |  |
-                             v  v
-                  +-----------------------+
-                  | Agent 2: Task Planner |
-                  | Top <= 10 daily tasks |
-                  +-----------+-----------+
-                              |
-                              v
-                  +-----------------------+
-                  | Agent 3: Java Dev     |
-                  | Spring Boot 3 / Java21|
-                  +-----------+-----------+
-                              |
-                              v
-                  +-----------------------+
-                  | Agent 4: Tester       | <----+ (Auto-Repair Loop)
-                  | Maven compile & test  | -----+ (Up to 2 retries)
-                  +-----------+-----------+
-                              |
-                              v (Tests Passed)
-                  +-----------------------+
-                  | Agent 5: Code Reviewer|
-                  | Standards & Security  |
-                  +-----------+-----------+
-                              |
-                              v (Approved score >= 7)
-                  +-----------------------+
-                  | Agent 6: GitHub Agent |
-                  | Commit -> Push -> PR  |
-                  +-----------+-----------+
-                              |
-                              v
-                  +-----------------------+
-                  | Daily Execution Report|
-                  | (Markdown & JSON)     |
-                  +-----------------------+
+                                 ┌───────────────────────────────────┐
+                                 │     Full-Stack Application        │
+                                 │  • Java 21 Spring Boot Backend    │
+                                 │  • React 18 / Vite / TS Frontend  │
+                                 └─────────────────┬─────────────────┘
+                                                   │
+                                                   ▼
+┌───────────────────────┐              ┌───────────────────────┐
+│   Task Database       │ <=========== │ Agent 1: Repo Analyst │
+│ (SQLite Persistence)  │              │ Static AST / Pom scan │
+└───────────┬───────────┘              └───────────┬───────────┘
+            │                                      │
+            └─────────────────┬────────────────────┘
+                              │
+                              ▼
+                   ┌───────────────────────┐
+                   │ Agent 2: Task Planner │
+                   │  Top Sprint Backlog   │
+                   └──────────┬────────────┘
+                              │
+                              ▼
+                   ┌───────────────────────┐
+                   │ Agent 3: Developer    │
+                   │ Java 21 & React Code  │
+                   └──────────┬────────────┘
+                              │
+                              ▼
+                   ┌───────────────────────┐
+                   │ Agent 4: Tester       │ <────┐ (Bounded Repair Loop)
+                   │  Stack-Aware Testing  │ ─────┘ (Up to 2 Retries)
+                   │  • Maven / JUnit 5    │
+                   │  • Vite / TypeScript  │
+                   └──────────┬────────────┘
+                              │
+                              ▼ (Tests Pass)
+                   ┌───────────────────────┐
+                   │ Agent 5: Reviewer     │
+                   │ Security & SOLID Gate │
+                   └──────────┬────────────┘
+                              │
+                              ▼ (Score >= 7)
+                   ┌───────────────────────┐
+                   │ Agent 6: GitHub Agent │
+                   │ Branch -> Commit -> PR│
+                   └───────────────────────┘
 ```
 
 ### The 6 Specialized Agents
 
-| # | Agent Name | Primary Responsibility |
-|---|---|---|
-| **1** | **Repository Analyst** | Scans `pom.xml`, controllers, services, repositories, entities, DTOs, and tests. Pinpoints architectural debt and missing tests. |
-| **2** | **Task Planner** | Plans up to 10 meaningful, safe, high-priority tasks per day. Consults SQLite task history to avoid duplicate work. |
-| **3** | **Java Developer** | Implements Java 21 / Spring Boot 3 code following SOLID principles, Bean Validation, and constructor injection. |
-| **4** | **Testing Agent** | Executes Maven builds (`mvn test`), parses Surefire results, and identifies compilation/test regressions. |
-| **5** | **Code Reviewer** | Independently reviews unified diffs for null safety, security vulnerabilities, performance, and best practices. |
-| **6** | **GitHub Agent** | Creates isolated branches (`agent/improve-task_xxx`), commits verified changes, pushes branch, and opens detailed Pull Requests. |
+| # | Agent Name | Core Responsibility |
+|:---:|:---|:---|
+| **1** | **Repository Analyst** | Scans `pom.xml`, controllers, services, repositories, DTOs, and frontend components to detect technical debt and missing test scenarios. |
+| **2** | **Task Planner** | Evaluates the 7-day product roadmap against completed task history in SQLite to plan actionable, deduplicated sprint tasks (max 2/day). |
+| **3** | **Developer Agent** | Implements clean, maintainable code following SOLID principles, Bean Validation, and modern design patterns. |
+| **4** | **Testing Agent** | Stack-aware testing engine. Verifies Java with Maven (`mvn test`), React with Vite build and TypeScript checks, and Python with Pytest. |
+| **5** | **Code Reviewer** | Analyzes git diffs for null safety, security vulnerabilities, OWASP standards, and code quality before approval. |
+| **6** | **GitHub Agent** | Commits to dedicated feature branches (`agent/improve-task_xxx`), pushes changes, and creates comprehensive Pull Requests. |
 
 ---
 
-## 📋 Technology Stack
+## 🔒 Safety & Production Guardrails
 
-- **Agent Language**: Python 3.11+
-- **LLM Provider**: [Groq API](https://console.groq.com) (Configurable model: e.g., `llama-3.3-70b-versatile`, `llama-3.1-70b-versatile`, `mixtral-8x7b-32768`)
-- **Frameworks**: LangChain (`langchain-groq`, `langchain-core`), Pydantic v2
-- **Version Control**: GitPython & GitHub REST API v3
-- **Target Application**: Java 21, Spring Boot 3.x, Maven, JUnit 5, Mockito
+1. **No Direct Pushes to Protected Branches**: All autonomous changes are committed to isolated feature branches.
+2. **Never Force-Push**: Force-pushing is strictly forbidden and blocked.
+3. **Strict Extension Allowlist**: Modifications are constrained strictly to `.java`, `.tsx`, `.ts`, `.css`, `.html`, `.xml`, `.properties`, `.yml`, `.sql`, and `.md`.
+4. **Denylist Protections**: Files matching `.env*`, `credentials`, `id_rsa`, or `secrets.json` are rejected with errors.
+5. **Pre-Commit Verification**: No code is committed unless the target stack's tests compile and pass.
+6. **Bounded Repair Limit**: If a build fails, the Developer Agent is permitted at most 2 targeted repair attempts; otherwise, changes are rolled back.
+7. **Human Approval Gate**: Pull requests require human review and merge (`auto_merge: false`).
+
+---
+
+## 🛠️ Multi-Stack Technology
+
+### Autonomous Coding Agent
+- **Language**: Python 3.11+
+- **LLM Engine**: [Groq API](https://console.groq.com) (`llama-3.3-70b-versatile`) with offline fallback simulation engine
+- **Libraries**: LangChain, Pydantic v2, GitPython, HTTPX
 - **Persistence**: SQLite (`data/agent_tasks.db`)
-- **Automation**: GitHub Actions (Scheduled daily at 9:00 AM IST / 03:30 UTC)
+- **CI/CD Automation**: GitHub Actions scheduled daily with manual dispatch
+
+### CareerPilot AI Application
+- **Backend**: Java 21, Spring Boot 3.3.0, Spring Data JPA, Hibernate, Bean Validation
+- **Database**: PostgreSQL (Production) / H2 In-Memory (Local Testing)
+- **Security**: BCrypt password hashing (`spring-security-crypto`), JWT session support
+- **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, Lucide Icons
+- **Containerization**: Multi-stage Docker build with Alpine JRE 21
 
 ---
 
-## 🚀 Setup & Execution Guide (Windows PowerShell)
+## 💻 Local Setup & Execution Guide
 
-### 1. Clone & Enter Repository
-
-```powershell
-cd c:\Users\akjan\AI-GitHub-Coding-Agent
+### 1. Clone the Repository
+```bash
+git clone https://github.com/laxman235/AI-GitHub-Coding-Agent.git
+cd AI-GitHub-Coding-Agent
 ```
 
 ### 2. Configure Environment Variables
-
-Copy the example environment template:
-
-```powershell
-Copy-Item .env.example .env
+```bash
+cp .env.example .env
 ```
-
-Open `.env` and provide your credentials:
-
+Provide your Groq API key and GitHub credentials in `.env` (this file is excluded from git):
 ```ini
-GROQ_API_KEY=gsk_your_groq_api_key_here
+GROQ_API_KEY=gsk_your_groq_api_key
 GROQ_MODEL=llama-3.3-70b-versatile
-GITHUB_TOKEN=ghp_your_personal_access_token_here
+GITHUB_TOKEN=ghp_your_github_token
 REPO_OWNER=laxman235
 REPO_NAME=AI-GitHub-Coding-Agent
-TARGET_BRANCH=main
-TARGET_REPO_PATH=sample-spring-boot-app
-MAX_DAILY_TASKS=10
-DRY_RUN=false
 ```
 
-### 3. Install Dependencies
-
-```powershell
+### 3. Install Agent Dependencies
+```bash
 python -m pip install -r requirements.txt
 ```
 
-### 4. Run the Test Suite
-
-Verify all Python agent components:
-
-```powershell
-python -m pytest tests -v
+### 4. Run the Agent Test Suite
+```bash
+python -m pytest tests/ -v
 ```
 
-### 5. Run the Autonomous Agent
-
-#### A. Dry-Run Mode (Simulation & Verification without Remote Push):
-```powershell
+### 5. Execute the Autonomous Coding Agent
+```bash
+# Run simulation mode without remote git pushes:
 python -m agent.main --dry-run --verbose
+
+# Run production cycle (executing sprint tasks):
+python -m agent.main --force --verbose
 ```
 
-#### B. Live Production Mode:
-```powershell
-python -m agent.main --max-tasks 5 --verbose
+### 6. Run CareerPilot AI Locally
+
+**Backend (Spring Boot)**:
+```bash
+cd sample-spring-boot-app
+mvn spring-boot:run
+# Backend running at http://localhost:8080
 ```
 
-#### C. Run Against a Custom Local Spring Boot Project:
-```powershell
-python -m agent.main --target-path "C:\path\to\your\spring-boot-project"
+**Frontend (React Vite)**:
+```bash
+cd careerpilot-ui
+npm install
+npm run dev
+# Frontend running at http://localhost:5173
 ```
 
 ---
 
-## 🔒 Safety & Guardrails
+## 📅 7-Day Autonomous Sprint Roadmap
 
-1. **No Direct Pushes to `main`**: All changes are committed to isolated branches (`agent/improve-*`).
-2. **Never Force-Push**: Force-pushing is strictly forbidden in the codebase.
-3. **No Arbitrary Code Execution**: File modifications are restricted to an explicit extension allowlist (`.java`, `.xml`, `.properties`, `.yml`, `.sql`, `.md`).
-4. **Denylist Protections**: Files matching `.env`, `credentials`, `id_rsa`, `secrets.json`, or `.git` are rejected with errors.
-5. **Pre-Commit Verification**: No code is ever committed unless Maven compilation and unit tests pass.
-6. **Bounded Repair Limit**: If tests fail, the Developer Agent is permitted at most 2 targeted repair attempts. If tests still fail, the change is automatically rolled back.
-7. **Independent Reviewer Gate**: Code is rejected if the Reviewer Agent scores below 7/10 or flags security risks.
-8. **Human Merge Required**: The agent opens Pull Requests and never auto-merges into production branches.
-
----
-
-## ⏰ Daily Automation via GitHub Actions
-
-The workflow in [`.github/workflows/daily_agent.yml`](.github/workflows/daily_agent.yml):
-- Executes automatically **every day at 9:00 AM IST** (`30 3 * * *` UTC).
-- Supports on-demand execution via **Actions -> Run workflow** with parameters `dry_run` and `max_tasks`.
-- Enforces single-execution concurrency to prevent race conditions.
-- Caches Maven dependencies and the SQLite task history database (`data/agent_tasks.db`) between workflow runs.
-- Saves execution reports as workflow artifacts and publishes them directly to the **GitHub Actions Job Summary**.
-
-### Required GitHub Secrets & Permissions
-
-In your GitHub repository settings (**Settings -> Secrets and variables -> Actions**):
-
-1. **Secrets**:
-   - `GROQ_API_KEY`: Your Groq Cloud API key.
-   - `GITHUB_TOKEN`: GitHub automatically provides this, or you can supply a Personal Access Token with `repo` scope if cross-repository pushes are needed.
-2. **Workflow Permissions** (**Settings -> Actions -> General -> Workflow permissions**):
-   - Select **Read and write permissions**.
-   - Check **Allow GitHub Actions to create and approve pull requests**.
+- [x] **Day 1: Foundation & Auth Baseline**: `User` entity, `Role` enum, DTO validation, JPA repository, and initial unit tests.
+- [x] **Day 2: Authentication & Session**: REST login/registration endpoints, BCrypt password hashing, session persistence, and UI modal tabs.
+- [ ] **Day 3: Job Discovery Engine**: `Job` entity, multi-attribute search queries, `JobService`, and `JobController` REST endpoints.
+- [ ] **Day 4: AI Resume Matching & ATS Scorer**: ATS semantic keyword extraction, score calculation (0–100%), and missing skills breakdown.
+- [ ] **Day 5: Job Scraping Connectors**: Automated job ingestion connectors with anti-bot compliance.
+- [ ] **Day 6: Application Tracker & Dashboard**: Kanban application status tracker, saved jobs, and real-time statistics grid.
+- [ ] **Day 7: E2E Integration & Final Sprint Report**: Multi-stack end-to-end integration verification, security audit, and final sprint report.
 
 ---
 
-## 📊 Sample Daily Report Preview
+## 📄 License
 
-```markdown
-# 🤖 Autonomous AI Agent Daily Execution Report
-
-**Repository:** `laxman235/AI-GitHub-Coding-Agent`  
-**Execution Date (UTC):** `2026-11-21 06:12:00`  
-**Run ID:** `run_20261121_061200`  
-**Overall Status:** ✅ SUCCESS  
-**Groq Model Configured:** `llama-3.3-70b-versatile`  
-
-## 📊 Execution Summary
-| Metric | Count |
-| :--- | :--- |
-| Tasks Identified | 2 |
-| Tasks Attempted | 2 |
-| Tasks Completed & PR'd | 2 |
-| Tasks Failed / Rejected | 0 |
-
-## 📝 Task Details
-| # | Title | Category | Status | Review Score | PR / Branch |
-|---|---|---|---|---|---|
-| 1 | Add Bean Validation to ProductDto | `FEATURE` | ✅ `COMPLETED` | 9/10 | [PR #12](https://github.com/...) |
-| 2 | Add JUnit 5 Mockito Tests for ProductService | `TEST_IMPROVEMENT` | ✅ `COMPLETED` | 9/10 | [PR #13](https://github.com/...) |
-```
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

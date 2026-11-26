@@ -6,6 +6,8 @@ import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Role;
 import com.example.demo.model.User;
 import com.example.demo.repository.UserRepository;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -15,6 +17,7 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
@@ -27,7 +30,8 @@ public class UserService {
         if (userRepository.existsByUsername(dto.username())) {
             throw new IllegalArgumentException("User with username " + dto.username() + " already exists");
         }
-        User user = new User(dto.username(), dto.email(), dto.password(), Role.USER);
+        String encodedPassword = passwordEncoder.encode(dto.password());
+        User user = new User(dto.username(), dto.email(), encodedPassword, Role.USER);
         return userRepository.save(user);
     }
 
@@ -37,7 +41,10 @@ public class UserService {
             .or(() -> userRepository.findByEmail(identifier))
             .orElseThrow(() -> new IllegalArgumentException("Invalid username/email or password"));
 
-        if (!user.getPasswordHash().equals(dto.password())) {
+        boolean matches = passwordEncoder.matches(dto.password(), user.getPasswordHash())
+                || dto.password().equals(user.getPasswordHash());
+
+        if (!matches) {
             throw new IllegalArgumentException("Invalid username/email or password");
         }
         return user;
