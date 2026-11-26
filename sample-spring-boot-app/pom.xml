@@ -53,12 +53,11 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Byte Buddy for Java 21-25+ compatibility with Mockito -->
+        <!-- Byte Buddy for Hibernate runtime and Mockito Java 21 compatibility -->
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy</artifactId>
             <version>1.15.11</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>net.bytebuddy</groupId>
