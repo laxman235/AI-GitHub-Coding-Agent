@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from './components/Navbar.tsx';
 import StatsGrid from './components/StatsGrid.tsx';
 import JobFeed from './components/JobFeed.tsx';
@@ -13,12 +13,25 @@ export default function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<string | null>(null);
 
+  useEffect(() => {
+    const savedUser = localStorage.getItem('careerpilot_user');
+    if (savedUser) {
+      setCurrentUser(savedUser);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('careerpilot_user');
+    setCurrentUser(null);
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         onOpenAuth={() => setShowAuthModal(true)} 
+        onLogout={handleLogout}
         currentUser={currentUser}
       />
 

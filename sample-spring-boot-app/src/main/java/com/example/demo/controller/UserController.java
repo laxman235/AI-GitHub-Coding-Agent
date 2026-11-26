@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.UserLoginDto;
 import com.example.demo.dto.UserRegistrationDto;
 import com.example.demo.model.User;
 import com.example.demo.service.UserService;
@@ -23,6 +24,12 @@ public class UserController {
     public ResponseEntity<User> registerUser(@Valid @RequestBody UserRegistrationDto dto) {
         User created = userService.registerUser(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<User> loginUser(@Valid @RequestBody UserLoginDto dto) {
+        User user = userService.loginUser(dto);
+        return ResponseEntity.ok(user);
     }
 
     @GetMapping("/users/{id}")

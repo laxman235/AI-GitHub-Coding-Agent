@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.dto.UserLoginDto;
 import com.example.demo.dto.UserRegistrationDto;
 import com.example.demo.exception.ResourceNotFoundException;
 import com.example.demo.model.Role;
@@ -28,6 +29,18 @@ public class UserService {
         }
         User user = new User(dto.username(), dto.email(), dto.password(), Role.USER);
         return userRepository.save(user);
+    }
+
+    public User loginUser(UserLoginDto dto) {
+        String identifier = dto.usernameOrEmail().trim();
+        User user = userRepository.findByUsername(identifier)
+            .or(() -> userRepository.findByEmail(identifier))
+            .orElseThrow(() -> new IllegalArgumentException("Invalid username/email or password"));
+
+        if (!user.getPassword().equals(dto.password())) {
+            throw new IllegalArgumentException("Invalid username/email or password");
+        }
+        return user;
     }
 
     @Transactional(readOnly = true)

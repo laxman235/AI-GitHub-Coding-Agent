@@ -13,6 +13,11 @@ export interface UserRegistrationPayload {
   password: string;
 }
 
+export interface UserLoginPayload {
+  usernameOrEmail: string;
+  password: string;
+}
+
 export interface UserResponse {
   id: number;
   username: string;
@@ -24,6 +29,10 @@ export interface UserResponse {
 export const authService = {
   register: async (payload: UserRegistrationPayload): Promise<UserResponse> => {
     const res = await api.post<UserResponse>('/auth/register', payload);
+    return res.data;
+  },
+  login: async (payload: UserLoginPayload): Promise<UserResponse> => {
+    const res = await api.post<UserResponse>('/auth/login', payload);
     return res.data;
   },
   getUser: async (id: number): Promise<UserResponse> => {
