@@ -46,6 +46,12 @@ def main():
         help="Path to Java Spring Boot repository or project root"
     )
     parser.add_argument(
+        "--force",
+        "--ignore-daily-cap",
+        action="store_true",
+        help="Ignore daily task limit (e.g. for testing or executing next sprint day immediately)"
+    )
+    parser.add_argument(
         "--verbose",
         "-v",
         action="store_true",
@@ -77,7 +83,8 @@ def main():
     orchestrator = AgentOrchestrator(config)
     summary = orchestrator.execute(
         max_tasks=config.execution.max_daily_tasks,
-        dry_run=config.execution.dry_run
+        dry_run=config.execution.dry_run,
+        ignore_daily_cap=args.force
     )
 
     print("\n" + "=" * 60)
