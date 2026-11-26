@@ -37,7 +37,7 @@ public class UserService {
             .or(() -> userRepository.findByEmail(identifier))
             .orElseThrow(() -> new IllegalArgumentException("Invalid username/email or password"));
 
-        if (!user.getPassword().equals(dto.password())) {
+        if (!user.getPasswordHash().equals(dto.password())) {
             throw new IllegalArgumentException("Invalid username/email or password");
         }
         return user;

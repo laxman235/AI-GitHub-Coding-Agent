@@ -17,7 +17,7 @@ public class RootController {
         response.put("status", "UP");
         response.put("service", "CareerPilot AI Backend API");
         response.put("version", "1.0.0");
-        response.put("endpoints", List.of("/api/products", "/api/auth/register", "/api/auth/users", "/api/health"));
+        response.put("endpoints", List.of("/api/products", "/api/auth/register", "/api/auth/login", "/api/auth/users", "/api/health"));
         return ResponseEntity.ok(response);
     }
 
