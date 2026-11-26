@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: careerpilot-backend
+    runtime: docker
+    dockerfilePath: ./sample-spring-boot-app/Dockerfile
+    dockerContext: ./sample-spring-boot-app
+    plan: free
+    region: oregon
+    envVars:
+      - key: PORT
+        value: 8080
