@@ -282,8 +282,8 @@ class AgentOrchestrator:
                 modified_paths.append(repo_rel_path)
 
             # Step C: Testing Agent verifies compilation & tests
-            logger.info("-> Invoking Testing Agent (Maven compile and test)...")
-            test_res = self.tester_agent.run_tests()
+            logger.info("-> Invoking Testing Agent (compile and test)...")
+            test_res = self.tester_agent.run_tests(task=task)
 
             # Step D: Bounded Repair Loop if tests failed
             repair_attempts = 0
@@ -306,7 +306,7 @@ class AgentOrchestrator:
                     if repo_rel_path not in modified_paths:
                         modified_paths.append(repo_rel_path)
 
-                test_res = self.tester_agent.run_tests()
+                test_res = self.tester_agent.run_tests(task=task)
 
             if not test_res.success:
                 task.status = TaskStatus.BUILD_FAILED if not test_res.compilation_success else TaskStatus.TEST_FAILED

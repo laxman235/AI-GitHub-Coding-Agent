@@ -182,12 +182,23 @@ class TestService:
         return res
 
     def run_python_tests(self) -> StackTestResult:
-        """Execute Python pytest test suite."""
-        python_bin = sys.executable or "python"
+        """Execute Python pytest test suite for AI service components."""
         repo_root = os.path.dirname(self.project_path) if "sample-spring-boot-app" in self.project_path else self.project_path
+        ai_service_path = os.path.join(repo_root, "ai-service")
+        
+        # Only run pytest if ai-service directory exists (do not run agent meta-tests recursively)
+        if not os.path.exists(ai_service_path):
+            return StackTestResult(
+                stack="Python",
+                success=True,
+                status="SKIPPED",
+                output_summary="No ai-service Python test directory found; skipped."
+            )
+
+        python_bin = sys.executable or "python"
         try:
             proc = subprocess.run(
-                [python_bin, "-m", "pytest", "tests/", "-q"],
+                [python_bin, "-m", "pytest", "ai-service/", "-q"],
                 cwd=repo_root,
                 capture_output=True,
                 text=True,
@@ -196,9 +207,8 @@ class TestService:
             )
             raw = (proc.stdout or "") + "\n" + (proc.stderr or "")
             success = proc.returncode == 0
-            # Parse number of passed tests if any
             m = re.search(r"(\d+) passed", raw)
-            tests_run = int(m.group(1)) if m else (14 if success else 0)
+            tests_run = int(m.group(1)) if m else (1 if success else 0)
             return StackTestResult(
                 stack="Python",
                 success=success,
@@ -226,6 +236,15 @@ class TestService:
                 success=True,
                 status="SKIPPED",
                 output_summary="No React frontend directory found; skipped."
+            )
+
+        # Check if node_modules exists
+        if not os.path.exists(os.path.join(ui_path, "node_modules")):
+            return StackTestResult(
+                stack="React",
+                success=True,
+                status="SKIPPED",
+                output_summary="careerpilot-ui/node_modules not installed; skipped frontend build check."
             )
 
         npm_bin = shutil.which("npm") or shutil.which("npm.cmd")
@@ -264,13 +283,40 @@ class TestService:
                 output_summary=f"React verification error: {str(e)}"
             )
 
-    def run_all_tests(self, target_test_class: Optional[str] = None) -> MultiStackTestResult:
-        """Run all test suites across the multi-stack architecture."""
+    def run_all_tests(
+        self,
+        target_test_class: Optional[str] = None,
+        target_files: Optional[List[str]] = None
+    ) -> MultiStackTestResult:
+        """Run test suites across the multi-stack architecture."""
         maven_res = self.run_tests(target_test_class)
         python_res = self.run_python_tests()
         react_res = self.run_react_checks()
 
-        all_success = maven_res.success and python_res.success and react_res.success
+        # If a specific task is being tested, evaluate success based on the affected stack
+        if target_files:
+            has_java = any(f.endswith((".java", ".xml")) or "sample-spring-boot-app" in f for f in target_files)
+            has_react = any(f.endswith((".tsx", ".ts", ".jsx", ".js", ".css")) or "careerpilot-ui" in f for f in target_files)
+            has_python = any(f.endswith(".py") or "ai-service" in f for f in target_files)
+
+            required_successes = []
+            if has_java:
+                required_successes.append(maven_res.success)
+            if has_react and react_res.status != "SKIPPED":
+                required_successes.append(react_res.success)
+            if has_python and python_res.status != "SKIPPED":
+                required_successes.append(python_res.success)
+
+            all_success = all(required_successes) if required_successes else maven_res.success
+        else:
+            # Baseline check: only active/non-skipped stacks must succeed
+            active_checks = [maven_res.success]
+            if python_res.status != "SKIPPED":
+                active_checks.append(python_res.success)
+            if react_res.status != "SKIPPED":
+                active_checks.append(react_res.success)
+            all_success = all(active_checks)
+
         comp_success = maven_res.compilation_success
 
         summaries = [
@@ -285,7 +331,7 @@ class TestService:
             tests_run=maven_res.tests_run + python_res.tests_run + react_res.tests_run,
             failures=maven_res.failures + python_res.failures + react_res.failures,
             errors=maven_res.errors + python_res.errors + react_res.errors,
-            skipped=maven_res.skipped,
+            skipped=maven_res.skipped + (1 if python_res.status == "SKIPPED" else 0) + (1 if react_res.status == "SKIPPED" else 0),
             failed_tests=maven_res.failed_tests,
             compilation_errors=maven_res.compilation_errors,
             output_summary=" | ".join(summaries),
